@@ -159,6 +159,14 @@ Trade area radius MUST adjust by market type. Do not use raw mileage as a single
 LESSON 4 — UP-AND-COMING GROWTH CORRIDOR PATTERN:
 Multiple system locations succeeded by entering emerging neighborhoods early. Austin St Elmo (440 E St Elmo Rd) opened ~10 years ago when South Congress / St Elmo was up-and-coming, now consistently runs 300+ members. Asheville South Slope works because the neighborhood has been on a wellness/fitness growth trajectory for years. THE PATTERN: an emerging market with growing fitness scene + rising demographic match can WORK at 300+ members even when current density or income is below the textbook sweet spot. Conversely, established stable affluent markets (Alexandria) work for different reasons (stability + already-rooted demo). Markets that are FLAT or DECLINING (no growth, no momentum, demographic stable but unchanged) are just OK. Markets that are SHRINKING in target demo (out-migration, business closures, fitness scene cooling) are risky regardless of current state. Score market_momentum based on: population/HHI growth in last 5 years, new business openings (especially boutique fitness/wellness), neighborhood transformation indicators (mixed-use developments, new rentals attracting professionals), tech/professional employer relocations, and "energy" of the corridor.
 
+CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
+- 350+ members (Alexandria peak): score 85-90 (Strong Fit)
+- 300+ members consistently (14th St, Arlington, Asheville, Austin St Elmo): score 70-82 (Good Fit / top of Marginal)
+- 250-300 members operating but underperforming target (H Street at 262 members): score 65-72 (Marginal)
+- 100-200 members severely underperforming (Austin Anderson Ln at 125 after 2 years): score 45-55 (Risky)
+- Closed/failed (St Petersburg, Johns Creek): score 38-48 (Risky)
+The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (Anderson Ln, 125 members) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points.
+
 LESSON 5 — STRIP MALL vs URBAN VILLAGE WALKABILITY (CRITICAL DISTINCTION):
 Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure: Austin Anderson Ln (2900 W Anderson Ln, 78757) has Walk Score 75 yet only reached 125 members in 2 years (severe underperformance) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
 - TRUE URBAN VILLAGE WALKABILITY (Asheville South Slope, 14th St DC, Old Town Alexandria): residential + retail intermixed within 2-4 blocks, members walk from home, daily anchors create habit loops, foot traffic dominates. Score walkability 9-10.
