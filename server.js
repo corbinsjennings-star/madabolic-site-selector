@@ -31,14 +31,31 @@ function ensureStore() {
     console.log('[store] Initialized from seed');
     return;
   }
-  // Migration: merge any new seed locations OR new demographic_scores fields into existing store.
-  // Preserves runtime-added data (franchisee submissions, manual edits).
+  // Migration: sync store with seed file.
+  // - Adds new seed locations
+  // - Refreshes demographic_scores when schema changes
+  // - Removes locations that were sourced from seed but no longer exist in seed file
+  // - Preserves runtime-added data (typeform/manual entries with source != 'seed')
   try {
     const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
     const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    const seedIds = new Set((seed.locations || []).map(l => l.id));
     let changed = false;
+
+    // Remove orphaned seed-sourced entries
+    const beforeCount = store.locations.length;
+    store.locations = store.locations.filter(l => {
+      if (l.source === 'seed' && !seedIds.has(l.id)) {
+        console.log('[store] Migration: removed orphaned seed location', l.id);
+        return false;
+      }
+      return true;
+    });
+    if (store.locations.length !== beforeCount) changed = true;
+
+    // Add or refresh seed locations
     for (const seedLoc of (seed.locations || [])) {
-      const existing = (store.locations || []).find(l => l.id === seedLoc.id);
+      const existing = store.locations.find(l => l.id === seedLoc.id);
       if (!existing) {
         store.locations.push(seedLoc);
         console.log('[store] Migration: added new seed location', seedLoc.id);
@@ -49,12 +66,14 @@ function ensureStore() {
         const newScores = seedLoc.demographic_scores;
         const oldKeys = Object.keys(oldScores).sort().join(',');
         const newKeys = Object.keys(newScores).sort().join(',');
-        if (oldKeys !== newKeys) {
+        const oldValues = JSON.stringify(oldScores);
+        const newValues = JSON.stringify(newScores);
+        if (oldKeys !== newKeys || oldValues !== newValues) {
           existing.demographic_scores = newScores;
           existing.performance_tier = seedLoc.performance_tier || existing.performance_tier;
           existing.performance_label = seedLoc.performance_label || existing.performance_label;
           existing.notes = seedLoc.notes || existing.notes;
-          console.log('[store] Migration: refreshed demographic_scores for', seedLoc.id);
+          console.log('[store] Migration: refreshed scores for', seedLoc.id);
           changed = true;
         }
       }
@@ -195,7 +214,7 @@ LESSON 6 — TRUE URBAN VILLAGE CAN ABSORB LOCAL COMPETITION:
 Cincinnati Woodburn (2543 Woodburn Ave, East Walnut Hills) is on track for 300+ members in 18 months DESPITE having a competing fitness studio (Fitness Clarified) literally 3 doors away. Why: when fundamentals are strong (income sweet spot $97-107k, true urban village walkability, $55M Woodburn Exchange momentum, perfect demo age 35-37), one local competitor doesn't kill demand — execution and differentiation handle it. Distinguish:
 - TRUE URBAN VILLAGE WITH ONE LOCAL COMPETITOR (Cincinnati): absorbable. Score competition 5-7, not 2-3.
 - OVERSATURATED BOUTIQUE CORRIDOR (Arlington VA): F45/Barry's/OTF/Solidcore/Burn all stacked within 1-2 miles fighting for the same finite pool. Score competition 3-5.
-- OVERSATURATED + STROAD (Anderson Ln Austin): Planet Fitness 2 blocks AND F45/OTF nearby in a non-village layout. Score competition 4 AND walkability 4 hard.
+- OVERSATURATED + STROAD (suburban arterial in major metro with multiple competitors): Planet Fitness within 2 blocks AND F45/OTF/Solidcore stacked in a non-village layout. Score competition 4 AND walkability 4 hard.
 A single direct competitor in a real urban village is FAR less damaging than 3 competitors in a saturated stroad market.
 
 CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
@@ -203,14 +222,14 @@ CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
 - 300+ members consistently in major metro (14th St, Cincinnati at 18mo, Arlington, Asheville, Austin St Elmo): score 75-83 (Good Fit)
 - 250-300 members operating but underperforming target (H Street at 262 members in major metro): score 65-72 (Marginal)
 - 200-250 members in small market with limited alternatives (Charlottesville at 245, Scotts Valley at 230): score 60-68 (Marginal — appropriate for small market)
-- 100-200 members severely underperforming in major metro (Austin Anderson Ln at 125 after 2 years): score 45-55 (Risky)
+- 100-200 members severely underperforming in major metro (stroad strip mall layout, multiple competitors nearby): score 45-55 (Risky)
 - Closed/failed (St Petersburg, Johns Creek): score 38-48 (Risky)
-The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (Anderson Ln, 125 members) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points. ALSO: a 230-member small-market location with limited alternatives is NOT the same as a 230-member major-metro location with multiple competitors — context shapes whether 230 is success or failure.
+The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (~125 members in major metro) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points. ALSO: a 230-member small-market location with limited alternatives is NOT the same as a 230-member major-metro location with multiple competitors — context shapes whether 230 is success or failure.
 
 LESSON 5 — STRIP MALL vs URBAN VILLAGE WALKABILITY (CRITICAL DISTINCTION):
-Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure: Austin Anderson Ln (2900 W Anderson Ln, 78757) has Walk Score 75 yet only reached 125 members in 2 years (severe underperformance) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
-- TRUE URBAN VILLAGE WALKABILITY (Asheville South Slope, 14th St DC, Old Town Alexandria): residential + retail intermixed within 2-4 blocks, members walk from home, daily anchors create habit loops, foot traffic dominates. Score walkability 9-10.
-- STROAD STRIP MALL (Anderson Ln, suburban arterials): Walk Score looks fine because there are stores nearby but the layout is car-centric, parking lots dominate, residential is separated from retail by major roads, members must drive and park. Score walkability 4-6 EVEN IF Walk Score is 70+.
+Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure pattern: a suburban arterial location with Walk Score 75 can struggle severely (low 100s members at 2 years) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
+- TRUE URBAN VILLAGE WALKABILITY (Asheville South Slope, 14th St DC, Old Town Alexandria, Cincinnati Woodburn): residential + retail intermixed within 2-4 blocks, members walk from home, daily anchors create habit loops, foot traffic dominates. Score walkability 9-10.
+- STROAD STRIP MALL (suburban arterials with retail co-tenants and big parking lots): Walk Score looks fine because there are stores nearby but the layout is car-centric, parking lots dominate, residential is separated from retail by major roads, members must drive and park. Score walkability 4-6 EVEN IF Walk Score is 70+.
 - TRUE SUBURBAN SPRAWL (Johns Creek): drive-only, no walkability. Score 0-2.
 For trade_area on a stroad strip mall: score 3-6. The location is a destination not a corridor pass-by. Members must DECIDE to drive there rather than passing it on their daily route.
 
@@ -236,7 +255,7 @@ YOUR TASK:
      * Is this a "drive to" destination or a "pass by" routine spot?
      Strip-mall stroad locations score 3-6. Off-path suburban score 1-4. Urban villages on commute corridors score 10-13.
    - market_momentum (max 6): Growth trajectory. Population/HHI growth, new business openings, neighborhood transformation, tech/professional employer relocations, fitness scene maturity. Booming growth corridors (Austin St Elmo, Asheville South Slope, Charlotte South End, Nashville East) score 5-6. Established stable affluent markets (Alexandria, Bethesda) score 3-4. Flat suburban sprawl scores 1-2. Shrinking markets score 0.
-3. Identify which existing MADabolic benchmark location it most resembles in profile (including FAILED Johns Creek and underperforming Austin Anderson Ln if profiles match).
+3. Identify which existing MADabolic benchmark location it most resembles in profile (including FAILED Johns Creek and St Pete if profiles match).
 4. List 4-6 specific, concrete PROS (real reasons it could succeed at this address — cite actual data found).
 5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found, especially trade area / habit corridor / momentum / strip-mall mismatches).
 

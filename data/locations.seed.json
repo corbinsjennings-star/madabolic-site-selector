@@ -387,46 +387,7 @@
         "trade_area": 6,
         "market_momentum": 3
       },
-      "notes": "230 ACTIVE MEMBERS. Strong owner-operator and ESSENTIALLY NO COMPETITION in immediate market. Scotts Valley CA is a small Santa Cruz County town (~12k pop). Bay Area tech professionals, families, suburban California. Strip-center retail positioning but minimal local boutique fitness alternatives. KEY LESSON: SMALL MARKETS WITH NO COMPETITION can support 200-280 members despite low density and stroad-style positioning. The combination of (1) limited alternatives forcing concentration and (2) strong owner/GM execution can overcome layout weaknesses that would kill the location in a saturated metro. Compare to Anderson Ln Austin (similar walkability/trade-area issues, but 4+ direct competitors within 1 mile = 125 members) vs Scotts Valley (similar layout issues, ZERO competitors = 230 members). Competition-to-market-size ratio matters more than absolute density.",
-      "source": "seed"
-    },
-    {
-      "id": "austin-anderson-ln-tx",
-      "studio_address": "MADabolic Austin (Anderson Ln) — 2900 W Anderson Ln, 78757",
-      "neighborhood": "North Shoal Creek / Anderson Ln",
-      "city": "Austin",
-      "state": "TX",
-      "performance_tier": "low",
-      "performance_label": "SEVERE UNDERPERFORM — only 125 members at 2 years (less than half of H Street)",
-      "opened_date": "",
-      "class_capacity": 25,
-      "price_12_month": null,
-      "price_month_to_month": null,
-      "current_members": 125,
-      "peak_members": null,
-      "avg_leads": null,
-      "avg_trials": null,
-      "avg_new_members": null,
-      "avg_terminations": null,
-      "commitment_split": "",
-      "gender_split": "",
-      "avg_member_age": null,
-      "competitors_2mi": "",
-      "parking_issue": "",
-      "demographic_scores": {
-        "stability": 7,
-        "psychographics": 7,
-        "walkability": 4,
-        "competition": 4,
-        "density": 4,
-        "income": 6,
-        "lifestyle": 5,
-        "housing": 3,
-        "hybrid": 1,
-        "trade_area": 3,
-        "market_momentum": 5
-      },
-      "notes": "125 ACTIVE MEMBERS at 2 years (severe underperformance — less than half of H Street's 262). Income, age, and Austin growth tailwinds all checked out on paper. Walk Score 75 looks fine ON PAPER — but this is a STROAD STRIP MALL, not urban village. Northwood Plaza on Anderson Lane between Burnet and Mopac is a car-centric retail corridor with Starbucks/CVS/Goodwill co-tenants. Members must DECIDE to drive here, not pass it on routine. Single-adult dominance (not married professionals) hurts retention severely. 22.7% earning $200k+ fragments to Lifetime Fitness/private trainers. Planet Fitness 2 blocks away creates price-point confusion. KEY LESSON: Walk Score alone is misleading — a strip mall on a stroad scores well on Walk Score but is NOT urban village walkability. Score walkability AT MOST 4 and trade_area AT MOST 3-4 on these layouts. This score (~50) should be 15+ points BELOW any operating-but-underperforming urban village location like H Street.",
+      "notes": "230 ACTIVE MEMBERS. Strong owner-operator and ESSENTIALLY NO COMPETITION in immediate market. Scotts Valley CA is a small Santa Cruz County town (~12k pop). Bay Area tech professionals, families, suburban California. Strip-center retail positioning but minimal local boutique fitness alternatives. KEY LESSON: SMALL MARKETS WITH NO COMPETITION can support 200-280 members despite low density and stroad-style positioning. The combination of (1) limited alternatives forcing concentration and (2) strong owner/GM execution can overcome layout weaknesses that would kill the location in a saturated metro. Competition-to-market-size ratio matters more than absolute density.",
       "source": "seed"
     },
     {
@@ -553,7 +514,7 @@
       "city": "Tampa",
       "state": "FL",
       "performance_tier": "low",
-      "performance_label": "Newer location, similar trajectory to Austin Anderson Ln (~125 members)",
+      "performance_label": "Newer location at ~125 members — entertainment district drag",
       "opened_date": "",
       "class_capacity": 25,
       "price_12_month": null,
@@ -582,7 +543,7 @@
         "trade_area": 5,
         "market_momentum": 5
       },
-      "notes": "Newer location performing similarly to Austin Anderson Ln (~125 members). Located in Ybor City, Tampa's historic Latin/Cuban heritage district — heavy entertainment/nightlife/tourism overlay rather than habit corridor. Walkable in patches but not true urban village (entertainment-zone walkability ≠ daily-routine walkability). Tampa boutique fitness saturation is significant (F45/Solidcore/Burn Boot Camp/Orangetheory all present). KEY PATTERN: ENTERTAINMENT DISTRICT WALKABILITY trap — areas like Ybor, H Street DC, Old Fourth Ward Atlanta have great walkability and density but the dominant cultural use is nightlife/tourism rather than weekday routine, which doesn't translate to MADabolic's 6am/5-7pm class consumption. Better acquisition than retention. Similar pattern to H Street DC.",
+      "notes": "Newer location at ~125 members. Located in Ybor City, Tampa's historic Latin/Cuban heritage district — heavy entertainment/nightlife/tourism overlay rather than habit corridor. Walkable in patches but not true urban village (entertainment-zone walkability ≠ daily-routine walkability). Tampa boutique fitness saturation is significant (F45/Solidcore/Burn Boot Camp/Orangetheory all present). KEY PATTERN: ENTERTAINMENT DISTRICT WALKABILITY trap — areas like Ybor, H Street DC, Old Fourth Ward Atlanta have great walkability and density but the dominant cultural use is nightlife/tourism rather than weekday routine, which doesn't translate to MADabolic's 6am/5-7pm class consumption. Better acquisition than retention. Similar pattern to H Street DC.",
       "source": "seed"
     },
     {
@@ -660,7 +621,7 @@
         "trade_area": 4,
         "market_momentum": 3
       },
-      "notes": "Low 100s members — underperforming. Westminster is a suburb of Denver on the Highway 36 corridor between Denver and Boulder. Suburban shopping district positioning, strip-center retail, car-dependent. Denver metro boutique fitness saturation hurts even suburban locations because consumers will drive to Boulder or downtown for premium options. Pattern similar to Anderson Ln Austin: stroad layout + suburban demographics + adjacent saturation = severe underperformance even if the city itself isn't bad.",
+      "notes": "Low 100s members — underperforming. Westminster is a suburb of Denver on the Highway 36 corridor between Denver and Boulder. Suburban shopping district positioning, strip-center retail, car-dependent. Denver metro boutique fitness saturation hurts even suburban locations because consumers will drive to Boulder or downtown for premium options. Classic stroad layout + suburban demographics + adjacent saturation = severe underperformance even if the city itself isn't bad.",
       "source": "seed"
     },
     {
