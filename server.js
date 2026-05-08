@@ -159,6 +159,13 @@ Trade area radius MUST adjust by market type. Do not use raw mileage as a single
 LESSON 4 — UP-AND-COMING GROWTH CORRIDOR PATTERN:
 Multiple system locations succeeded by entering emerging neighborhoods early. Austin St Elmo (440 E St Elmo Rd) opened ~10 years ago when South Congress / St Elmo was up-and-coming, now consistently runs 300+ members. Asheville South Slope works because the neighborhood has been on a wellness/fitness growth trajectory for years. THE PATTERN: an emerging market with growing fitness scene + rising demographic match can WORK at 300+ members even when current density or income is below the textbook sweet spot. Conversely, established stable affluent markets (Alexandria) work for different reasons (stability + already-rooted demo). Markets that are FLAT or DECLINING (no growth, no momentum, demographic stable but unchanged) are just OK. Markets that are SHRINKING in target demo (out-migration, business closures, fitness scene cooling) are risky regardless of current state. Score market_momentum based on: population/HHI growth in last 5 years, new business openings (especially boutique fitness/wellness), neighborhood transformation indicators (mixed-use developments, new rentals attracting professionals), tech/professional employer relocations, and "energy" of the corridor.
 
+LESSON 6 — TRUE URBAN VILLAGE CAN ABSORB LOCAL COMPETITION:
+Cincinnati Woodburn (2543 Woodburn Ave, East Walnut Hills) is on track for 300+ members in 18 months DESPITE having a competing fitness studio (Fitness Clarified) literally 3 doors away. Why: when fundamentals are strong (income sweet spot $97-107k, true urban village walkability, $55M Woodburn Exchange momentum, perfect demo age 35-37), one local competitor doesn't kill demand — execution and differentiation handle it. Distinguish:
+- TRUE URBAN VILLAGE WITH ONE LOCAL COMPETITOR (Cincinnati): absorbable. Score competition 5-7, not 2-3.
+- OVERSATURATED BOUTIQUE CORRIDOR (Arlington VA): F45/Barry's/OTF/Solidcore/Burn all stacked within 1-2 miles fighting for the same finite pool. Score competition 3-5.
+- OVERSATURATED + STROAD (Anderson Ln Austin): Planet Fitness 2 blocks AND F45/OTF nearby in a non-village layout. Score competition 4 AND walkability 4 hard.
+A single direct competitor in a real urban village is FAR less damaging than 3 competitors in a saturated stroad market.
+
 CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
 - 350+ members (Alexandria peak): score 85-90 (Strong Fit)
 - 300+ members consistently (14th St, Arlington, Asheville, Austin St Elmo): score 70-82 (Good Fit / top of Marginal)
@@ -182,10 +189,10 @@ YOUR TASK:
 2. Score across these 11 variables (totals to 100 points):
    - stability (max 18): Homeownership %, residency length, married professionals, established families IN THE IMMEDIATE 1-MILE TRADE AREA. Higher = more rooted. Penalize "single adult dominance" without families.
    - psychographics (max 12): Fit with target member — career-driven 25-45 professionals in immediate area. Penalize if median age is over 42 or under 28.
-   - walkability (max 10): TRUE URBAN VILLAGE walkability. Strip mall stroad with Walk Score 70+ scores only 4-6. Suburban sprawl 0-2.
+   - walkability (max 10): TRUE URBAN VILLAGE walkability. Score 9-10 when location is on a main business district corridor with mixed-use intermixed within 2-3 blocks (coffee, restaurants, retail, residential, daily anchors), Walk Score 70+. Strip mall stroad with Walk Score 70+ but separated layouts scores only 4-6. Suburban sprawl 0-2.
    - competition (max 9): INVERSE — higher score = LESS saturated. Heavy stacking of F45/Barry's/OTF/Solidcore/Burn = low score. Planet Fitness within 2 blocks = price-point confusion penalty.
    - density (max 7): Population per sq mi. Sweet spot 8k-25k. Score 0-2 below 4k/sq mi.
-   - income (max 10): Median HHI sweet spot $100-150k peaks at 10. Above $200k median or 20%+ of households over $200k: drop to 3-5. Below $75k: drop to 4-6.
+   - income (max 10): Median HHI in $90-150k = bullseye sweet spot, score 9-10. $75-90k or $150-180k = score 7-8. Above $200k median or 25%+ of households over $200k = drop to 3-5 (fragmentation to country clubs/Equinox/Lifetime). Below $75k = drop to 4-6 (price sensitivity, struggle to sustain $200+/mo memberships). DO NOT under-score when income is exactly in the bullseye.
    - lifestyle (max 8): Wellness culture indicators (Whole Foods, run clubs, athleisure, healthy restaurants).
    - housing (max 6): Townhomes/condos/owned, married professionals > student/short-term renter / single-adult dominant.
    - hybrid (max 1): Hybrid/remote work patterns, predictable schedules.
