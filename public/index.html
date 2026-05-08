@@ -507,15 +507,30 @@ function deleteFromHistory(idx) {
 function restoreFromHistory(idx) {
   const list = loadHistory();
   const entry = list[idx];
-  if (!entry || !entry.result) return;
+  if (!entry) return;
+  // Always pop the address back into the input so the user can rescore if needed
+  addrInput.value = entry.address;
+  if (!entry.result) {
+    // Old-format entry from before full-result storage. Offer to rescore.
+    setError(`"${entry.address}" was scored before details were saved. Click "Score" to re-run it.`);
+    setTimeout(() => setError(''), 5000);
+    return;
+  }
   currentResult = entry.result;
   currentScores = entry.result.scores;
   currentEvidence = entry.result.evidence || {};
   currentAddress = entry.address;
-  addrInput.value = entry.address;
   renderResults(entry.address, entry.result);
   resultsEl.classList.add('show');
   resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function clearAllHistory() {
+  if (!confirm('Clear all past evaluations? This cannot be undone.')) return;
+  localStorage.removeItem(HIST_KEY);
+  // Also clear old version keys
+  localStorage.removeItem('madabolic-site-evals-v1');
+  localStorage.removeItem('madabolic-site-evals-v2');
+  renderHistory();
 }
 function tierClassFromScore(score) {
   if (score >= 85) return 'tier-strong';
@@ -527,14 +542,21 @@ function renderHistory() {
   const list = loadHistory();
   const el = document.getElementById('history-list');
   if (!list.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;margin:0">No locations scored yet.</p>'; return; }
-  el.innerHTML = list.map((h, idx) => {
+  // Header with clear-all button
+  const header = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:var(--muted)">
+    <span>Click any row to view full details. ${list.length} eval${list.length === 1 ? '' : 's'} saved.</span>
+    <button class="toggle-btn" id="clear-history-btn">Clear all</button>
+  </div>`;
+  el.innerHTML = header + list.map((h, idx) => {
     const dateStr = new Date(h.ts).toLocaleDateString();
-    const score = (h.result && h.result.total) || 0;
+    const score = (h.result && h.result.total) || h.score || 0;
     const tierCls = tierClassFromScore(score);
     const tier = score >= 85 ? 'STRONG' : score >= 75 ? 'GOOD' : score >= 60 ? 'MARGINAL' : 'RISKY';
-    return `<div class="history-row" data-idx="${idx}">
+    const hasDetail = !!(h.result && h.result.scores);
+    const detailMark = hasDetail ? '' : ' <span style="color:var(--muted);font-size:10px">(no detail)</span>';
+    return `<div class="history-row" data-idx="${idx}" title="${hasDetail ? 'Click to view full evaluation' : 'No detail saved — click to put address back in input'}">
       <span class="h-tier ${tierCls}">${tier}</span>
-      <span class="h-addr">${escapeHtml(h.address)}</span>
+      <span class="h-addr">${escapeHtml(h.address)}${detailMark}</span>
       <span class="h-score">${score}</span>
       <span class="h-date">${dateStr}</span>
       <span class="h-delete" data-delete="${idx}" title="Delete">×</span>
@@ -555,6 +577,8 @@ function renderHistory() {
       deleteFromHistory(idx);
     });
   });
+  const clearBtn = document.getElementById('clear-history-btn');
+  if (clearBtn) clearBtn.addEventListener('click', clearAllHistory);
 }
 
 runBtn.addEventListener('click', runEvaluation);
