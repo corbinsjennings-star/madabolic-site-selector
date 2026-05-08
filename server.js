@@ -159,6 +159,19 @@ Trade area radius MUST adjust by market type. Do not use raw mileage as a single
 LESSON 4 — UP-AND-COMING GROWTH CORRIDOR PATTERN:
 Multiple system locations succeeded by entering emerging neighborhoods early. Austin St Elmo (440 E St Elmo Rd) opened ~10 years ago when South Congress / St Elmo was up-and-coming, now consistently runs 300+ members. Asheville South Slope works because the neighborhood has been on a wellness/fitness growth trajectory for years. THE PATTERN: an emerging market with growing fitness scene + rising demographic match can WORK at 300+ members even when current density or income is below the textbook sweet spot. Conversely, established stable affluent markets (Alexandria) work for different reasons (stability + already-rooted demo). Markets that are FLAT or DECLINING (no growth, no momentum, demographic stable but unchanged) are just OK. Markets that are SHRINKING in target demo (out-migration, business closures, fitness scene cooling) are risky regardless of current state. Score market_momentum based on: population/HHI growth in last 5 years, new business openings (especially boutique fitness/wellness), neighborhood transformation indicators (mixed-use developments, new rentals attracting professionals), tech/professional employer relocations, and "energy" of the corridor.
 
+LESSON 7 — SMALL MARKET DYNAMICS (CRITICAL CALIBRATION):
+Locations in small metros (city population under 75k or metro under 500k) need DIFFERENT calibration. The framework's density, walkability, and trade-area penalties were calibrated against major-metro expectations — they over-penalize small markets.
+- Charlottesville VA (city pop 45k, 923 Preston Ave): 240-250 members on a strip-center stroad with student-heavy demo and below-sweet-spot income. Works because boutique alternatives are limited and wellness culture supports retention.
+- Scotts Valley CA (town pop 12k, 262 Mt Hermon Rd): 230 members in a strip center despite low density (2k/sq mi). Works because there is ESSENTIALLY ZERO local competition AND a strong owner-operator.
+SMALL MARKET RULES:
+- 200-280 members is a SUCCESSFUL outcome in a small market (not 350+).
+- When competition is sparse (1 or fewer direct competitors within 2 miles), score competition 7-9 — limited alternatives concentrate demand.
+- Density penalty should soften: small markets are inherently low-density, and that's not a bug. Don't score density below 3 unless truly rural.
+- Trade area penalty also softens: in small markets, customers tolerate longer drives because they have to. A 10-15 minute drive in a small town is normal.
+- BUT do not soften walkability penalty — strip-center stroad in a small market is still strip-center stroad. Score walkability honestly.
+- Saturation in a small market is more dangerous than in a big metro. 2-3 direct competitors in a 50k city is OVERSATURATED. Score competition 3-4 in those cases.
+DISTINCTION FROM JOHNS CREEK FAILURE: small market with limited alternatives ≠ suburban sprawl with affluent fragmentation. Charlottesville/Scotts Valley work despite small-market constraints because target demo has few alternatives. Johns Creek failed because target demo had MANY alternatives (country clubs, Equinox-style privates, Lifetime Fitness) competing for their fitness spend.
+
 LESSON 6 — TRUE URBAN VILLAGE CAN ABSORB LOCAL COMPETITION:
 Cincinnati Woodburn (2543 Woodburn Ave, East Walnut Hills) is on track for 300+ members in 18 months DESPITE having a competing fitness studio (Fitness Clarified) literally 3 doors away. Why: when fundamentals are strong (income sweet spot $97-107k, true urban village walkability, $55M Woodburn Exchange momentum, perfect demo age 35-37), one local competitor doesn't kill demand — execution and differentiation handle it. Distinguish:
 - TRUE URBAN VILLAGE WITH ONE LOCAL COMPETITOR (Cincinnati): absorbable. Score competition 5-7, not 2-3.
@@ -168,11 +181,12 @@ A single direct competitor in a real urban village is FAR less damaging than 3 c
 
 CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
 - 350+ members (Alexandria peak): score 85-90 (Strong Fit)
-- 300+ members consistently (14th St, Arlington, Asheville, Austin St Elmo): score 70-82 (Good Fit / top of Marginal)
-- 250-300 members operating but underperforming target (H Street at 262 members): score 65-72 (Marginal)
-- 100-200 members severely underperforming (Austin Anderson Ln at 125 after 2 years): score 45-55 (Risky)
+- 300+ members consistently in major metro (14th St, Cincinnati at 18mo, Arlington, Asheville, Austin St Elmo): score 75-83 (Good Fit)
+- 250-300 members operating but underperforming target (H Street at 262 members in major metro): score 65-72 (Marginal)
+- 200-250 members in small market with limited alternatives (Charlottesville at 245, Scotts Valley at 230): score 60-68 (Marginal — appropriate for small market)
+- 100-200 members severely underperforming in major metro (Austin Anderson Ln at 125 after 2 years): score 45-55 (Risky)
 - Closed/failed (St Petersburg, Johns Creek): score 38-48 (Risky)
-The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (Anderson Ln, 125 members) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points.
+The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (Anderson Ln, 125 members) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points. ALSO: a 230-member small-market location with limited alternatives is NOT the same as a 230-member major-metro location with multiple competitors — context shapes whether 230 is success or failure.
 
 LESSON 5 — STRIP MALL vs URBAN VILLAGE WALKABILITY (CRITICAL DISTINCTION):
 Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure: Austin Anderson Ln (2900 W Anderson Ln, 78757) has Walk Score 75 yet only reached 125 members in 2 years (severe underperformance) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
