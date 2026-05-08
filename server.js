@@ -97,16 +97,17 @@ function newId(prefix = 'loc') {
 
 // ============ SCORING FRAMEWORK ============
 const VARIABLES = [
-  { key: 'stability',      name: 'Population Stability',          max: 20 },
-  { key: 'psychographics', name: 'Psychographic Fit',             max: 13 },
-  { key: 'walkability',    name: 'Walkability/Habit',             max: 10 },
-  { key: 'competition',    name: 'Competition Saturation',        max: 9  },
-  { key: 'density',        name: 'Population Density',            max: 8  },
-  { key: 'income',         name: 'Income Sweet Spot',             max: 10 },
-  { key: 'lifestyle',      name: 'Lifestyle Clustering',          max: 8  },
-  { key: 'housing',        name: 'Housing Mix',                   max: 6  },
-  { key: 'hybrid',         name: 'Hybrid Work Patterns',          max: 2  },
-  { key: 'trade_area',     name: 'Habit Corridor & Drive Access', max: 14 }
+  { key: 'stability',         name: 'Population Stability',          max: 18 },
+  { key: 'psychographics',    name: 'Psychographic Fit',             max: 12 },
+  { key: 'walkability',       name: 'Walkability/Habit',             max: 10 },
+  { key: 'competition',       name: 'Competition Saturation',        max: 9  },
+  { key: 'density',           name: 'Population Density',            max: 7  },
+  { key: 'income',            name: 'Income Sweet Spot',             max: 10 },
+  { key: 'lifestyle',         name: 'Lifestyle Clustering',          max: 8  },
+  { key: 'housing',           name: 'Housing Mix',                   max: 6  },
+  { key: 'hybrid',            name: 'Hybrid Work Patterns',          max: 1  },
+  { key: 'trade_area',        name: 'Habit Corridor & Drive Access', max: 13 },
+  { key: 'market_momentum',   name: 'Market Momentum & Growth',      max: 6  }
 ];
 
 function totalScore(scores) {
@@ -116,7 +117,7 @@ function tierFromScore(score) {
   if (score >= 85) return 'Strong Fit';
   if (score >= 75) return 'Good Fit';
   if (score >= 60) return 'Marginal';
-  return 'Risky';
+  return 'Risky'; // Underperforming or failure profile
 }
 
 function buildScoringPrompt(address, benchmarks) {
@@ -139,47 +140,72 @@ MADabolic wins in markets that are:
 - Age 25-45 sweet spot, peaking 32-38. Members want progression, structure, identity, real strength, not random HIIT chaos.
 - Wellness culture indicators: Whole Foods, Trader Joe's, run clubs, healthy restaurants, athleisure visibility.
 
-CRITICAL LESSON FROM A FAILED LOCATION:
+CRITICAL LESSONS FROM REAL DATA:
+
+LESSON 1 — JOHNS CREEK FAILURE PATTERN:
 The Johns Creek GA location FAILED despite strong demographics on paper. Why: target customers actually lived in central Alpharetta or western Johns Creek, NOT in the immediate area of the studio. Eastern State Bridge corridor is retail/office, not the residential cluster of the target demo. Heavy commute-hour traffic blocked access during key class times (6am, 5-7pm). Pass-through traffic volume at the exact spot was lower than the broader corridor suggested. Income skewed above sweet spot ($182k+ median) compounded with country-club fragmentation. THE LESSON: demographic catchment alone does NOT save a location if it's off-path from where target demo actually lives, OR if drive friction during class times is severe. SUBURBAN SPRAWL LOCATIONS (Walk Score below 30, density below 4k/sq mi, drive-only access) should score severely on Habit Corridor & Drive Access regardless of how good the broader trade area looks on paper.
+
+LESSON 2 — URBAN VILLAGE COMPENSATION PATTERN:
+Hyper-walkable urban village locations (Walk Score 85+, dense daily anchors, foot-traffic dominated) can succeed at 300+ members EVEN WHEN income, housing stability, or housing mix would otherwise look weak. Examples: Asheville South Slope works at ~300 members despite $71k median HHI (below sweet spot), apartment-heavy housing, and relatively low broader-metro density. Why: the habit corridor + lifestyle clustering at the immediate location overwhelms broader trade-area weaknesses. THE RULE: if walkability scores 9+ AND lifestyle scores 7+ AND trade_area scores 11+, apply REDUCED penalty to housing instability and below-sweet-spot income. Habit corridor compensates for tenure instability when foot traffic is the dominant acquisition channel.
+
+LESSON 3 — MARKET-SPECIFIC DRIVABILITY:
+Trade area radius MUST adjust by market type. Do not use raw mileage as a single rule:
+- Walkable urban village (Asheville, Old Town Alexandria, 14th St DC): trade area is 0.5-1 mile walking radius. Drive doesn't matter.
+- Dense urban core (Manhattan, downtown Chicago): trade area 5-10 minute drive or transit, ~1-2 miles.
+- Affluent suburban (Atlanta, Charlotte, Dallas suburbs): customers tolerate 15-20 minute drives. Trade area 5-8 mile drive radius.
+- Rural / small metro: customers tolerate 25+ minute drives. Trade area 10+ miles.
+- BUT high-traffic markets (LA, DC, Atlanta peak hours) shrink effective drive-time tolerance during class times (6am, noon, 5-7pm). Score trade_area lower if peak-hour drive time from primary residential cluster exceeds market norms.
+
+LESSON 4 — UP-AND-COMING GROWTH CORRIDOR PATTERN:
+Multiple system locations succeeded by entering emerging neighborhoods early. Austin St Elmo (440 E St Elmo Rd) opened ~10 years ago when South Congress / St Elmo was up-and-coming, now consistently runs 300+ members. Asheville South Slope works because the neighborhood has been on a wellness/fitness growth trajectory for years. THE PATTERN: an emerging market with growing fitness scene + rising demographic match can WORK at 300+ members even when current density or income is below the textbook sweet spot. Conversely, established stable affluent markets (Alexandria) work for different reasons (stability + already-rooted demo). Markets that are FLAT or DECLINING (no growth, no momentum, demographic stable but unchanged) are just OK. Markets that are SHRINKING in target demo (out-migration, business closures, fitness scene cooling) are risky regardless of current state. Score market_momentum based on: population/HHI growth in last 5 years, new business openings (especially boutique fitness/wellness), neighborhood transformation indicators (mixed-use developments, new rentals attracting professionals), tech/professional employer relocations, and "energy" of the corridor.
+
+LESSON 5 — STRIP MALL vs URBAN VILLAGE WALKABILITY (CRITICAL DISTINCTION):
+Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure: Austin Anderson Ln (2900 W Anderson Ln, 78757) has Walk Score 75 yet only reached 125 members in 2 years (severe underperformance) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
+- TRUE URBAN VILLAGE WALKABILITY (Asheville South Slope, 14th St DC, Old Town Alexandria): residential + retail intermixed within 2-4 blocks, members walk from home, daily anchors create habit loops, foot traffic dominates. Score walkability 9-10.
+- STROAD STRIP MALL (Anderson Ln, suburban arterials): Walk Score looks fine because there are stores nearby but the layout is car-centric, parking lots dominate, residential is separated from retail by major roads, members must drive and park. Score walkability 4-6 EVEN IF Walk Score is 70+.
+- TRUE SUBURBAN SPRAWL (Johns Creek): drive-only, no walkability. Score 0-2.
+For trade_area on a stroad strip mall: score 3-6. The location is a destination not a corridor pass-by. Members must DECIDE to drive there rather than passing it on their daily route.
 
 Existing MADabolic locations as benchmarks (use these as calibration anchors):
 ${benchSummary}
 
 YOUR TASK:
-1. Use web search to research "${address}" — pull demographics (median household income, age distribution, homeownership %), Walk Score, boutique fitness competition within 1-2 miles, neighborhood archetype, housing mix, traffic patterns, where the target demo actually clusters relative to the address.
-2. Score across these 10 variables (totals to 100 points):
-   - stability (max 20): Homeownership %, residency length, married professionals, established families IN THE IMMEDIATE 1-MILE TRADE AREA. Higher = more rooted.
-   - psychographics (max 13): Fit with target member — career-driven 25-45 professionals in immediate area. Penalize if median age is over 42 or under 28.
-   - walkability (max 10): Walk Score, daily anchors, mixed-use density. Score 0-2 for car-dependent suburban sprawl.
-   - competition (max 9): INVERSE — higher score = LESS saturated. Heavy stacking of F45/Barry's/OTF/Solidcore = low score.
-   - density (max 8): Population per sq mi. Sweet spot 8k-25k. Score 0-2 below 4k/sq mi.
-   - income (max 10): Median HHI sweet spot $100-150k peaks at 10. Above $200k median: drop to 3-5. Below $75k: drop to 4-6.
+1. Use web search to research "${address}" — pull demographics (median household income, age distribution, homeownership %), Walk Score, boutique fitness competition within 1-2 miles, neighborhood archetype, housing mix, traffic patterns, where the target demo actually clusters relative to the address, growth trajectory of the area, AND determine if the location is true urban village walkability or strip-mall stroad walkability.
+2. Score across these 11 variables (totals to 100 points):
+   - stability (max 18): Homeownership %, residency length, married professionals, established families IN THE IMMEDIATE 1-MILE TRADE AREA. Higher = more rooted. Penalize "single adult dominance" without families.
+   - psychographics (max 12): Fit with target member — career-driven 25-45 professionals in immediate area. Penalize if median age is over 42 or under 28.
+   - walkability (max 10): TRUE URBAN VILLAGE walkability. Strip mall stroad with Walk Score 70+ scores only 4-6. Suburban sprawl 0-2.
+   - competition (max 9): INVERSE — higher score = LESS saturated. Heavy stacking of F45/Barry's/OTF/Solidcore/Burn = low score. Planet Fitness within 2 blocks = price-point confusion penalty.
+   - density (max 7): Population per sq mi. Sweet spot 8k-25k. Score 0-2 below 4k/sq mi.
+   - income (max 10): Median HHI sweet spot $100-150k peaks at 10. Above $200k median or 20%+ of households over $200k: drop to 3-5. Below $75k: drop to 4-6.
    - lifestyle (max 8): Wellness culture indicators (Whole Foods, run clubs, athleisure, healthy restaurants).
-   - housing (max 6): Townhomes/condos/owned > student/short-term renter.
-   - hybrid (max 2): Hybrid/remote work patterns, predictable schedules.
-   - trade_area (max 14): NEW VARIABLE. Habit Corridor & Drive Access. Score on these factors:
-     * Is the location IN the daily routine path of the target demo, or off to the side requiring a detour?
-     * Drive-time from the primary target residential clusters during peak hours (6am, noon, 5-7pm class times)?
-     * Pass-through traffic volume at THIS EXACT SPOT (not just the corridor average)?
-     * Is this a destination people drive TO, or a place they pass naturally during their daily routine?
-     Off-path suburban locations with bad commute-hour access should score 1-4 here. Urban villages on commute corridors should score 11-14.
-3. Identify which existing MADabolic location it most resembles in profile (including the FAILED Johns Creek location if the profile matches).
+   - housing (max 6): Townhomes/condos/owned, married professionals > student/short-term renter / single-adult dominant.
+   - hybrid (max 1): Hybrid/remote work patterns, predictable schedules.
+   - trade_area (max 13): Habit Corridor & Drive Access. Score on:
+     * Is location IN daily routine path of target demo, or off to the side requiring a detour?
+     * Drive-time from primary target residential clusters during peak hours (6am, noon, 5-7pm)?
+     * Pass-through foot/vehicle traffic at THIS EXACT SPOT (not just corridor average)?
+     * Is this a "drive to" destination or a "pass by" routine spot?
+     Strip-mall stroad locations score 3-6. Off-path suburban score 1-4. Urban villages on commute corridors score 10-13.
+   - market_momentum (max 6): Growth trajectory. Population/HHI growth, new business openings, neighborhood transformation, tech/professional employer relocations, fitness scene maturity. Booming growth corridors (Austin St Elmo, Asheville South Slope, Charlotte South End, Nashville East) score 5-6. Established stable affluent markets (Alexandria, Bethesda) score 3-4. Flat suburban sprawl scores 1-2. Shrinking markets score 0.
+3. Identify which existing MADabolic benchmark location it most resembles in profile (including FAILED Johns Creek and underperforming Austin Anderson Ln if profiles match).
 4. List 4-6 specific, concrete PROS (real reasons it could succeed at this address — cite actual data found).
-5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found, especially any trade area / habit corridor mismatches).
+5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found, especially trade area / habit corridor / momentum / strip-mall mismatches).
 
 Return ONLY valid JSON, no markdown, no other text:
 {
   "scores": {
-    "stability": <number 0-20>,
-    "psychographics": <number 0-13>,
+    "stability": <number 0-18>,
+    "psychographics": <number 0-12>,
     "walkability": <number 0-10>,
     "competition": <number 0-9>,
-    "density": <number 0-8>,
+    "density": <number 0-7>,
     "income": <number 0-10>,
     "lifestyle": <number 0-8>,
     "housing": <number 0-6>,
-    "hybrid": <number 0-2>,
-    "trade_area": <number 0-14>
+    "hybrid": <number 0-1>,
+    "trade_area": <number 0-13>,
+    "market_momentum": <number 0-6>
   },
   "evidence": {
     "stability": "1-sentence specific reason citing data",
@@ -191,7 +217,8 @@ Return ONLY valid JSON, no markdown, no other text:
     "lifestyle": "...",
     "housing": "...",
     "hybrid": "...",
-    "trade_area": "..."
+    "trade_area": "...",
+    "market_momentum": "..."
   },
   "most_similar_location": "<exact studio_address from benchmarks above>",
   "similarity_explanation": "1-2 sentences on why this profile matches that existing location",

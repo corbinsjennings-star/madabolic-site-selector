@@ -94,10 +94,15 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 .match-callout { padding: 14px 18px; background: #fdf3f1; border-left: 3px solid var(--accent); border-radius: 4px; margin-bottom: 16px; font-size: 14px; line-height: 1.5; }
 .match-callout strong { color: var(--accent); }
 .verdict { padding: 16px 18px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
-.history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
+.history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+.history-row:hover { background: #efeae3; }
 .history-row .h-addr { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
 .history-row .h-score { font-weight: 700; min-width: 40px; text-align: right; }
 .history-row .h-date { color: var(--muted); font-size: 12px; min-width: 100px; text-align: right; }
+.history-row .h-delete { color: var(--muted); font-size: 14px; padding: 0 8px; cursor: pointer; opacity: 0; transition: opacity 0.15s; }
+.history-row:hover .h-delete { opacity: 1; }
+.history-row .h-delete:hover { color: var(--red); }
+.history-row .h-tier { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px; }
 .toggle-btn { background: none; color: var(--muted); padding: 6px 10px; font-size: 12px; border: 1px solid var(--line); }
 .toggle-btn:hover { background: var(--bg); }
 .manual-panel { display: none; margin-top: 12px; padding: 16px; background: var(--bg); border-radius: 8px; }
@@ -206,16 +211,17 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 <script>
 // ====== SCORING FRAMEWORK (must match server) ======
 const VARIABLES = [
-  { key: 'stability',      name: 'Population Stability',          max: 20, hint: 'Homeownership %, residency length, married professionals' },
-  { key: 'psychographics', name: 'Psychographic Fit',             max: 13, hint: '25-45 age mix, structured professionals, identity fit' },
-  { key: 'walkability',    name: 'Walkability/Habit',             max: 10, hint: 'Walk Score, daily anchors, mixed-use density' },
-  { key: 'competition',    name: 'Competition Saturation',        max: 9,  hint: 'Higher = less saturated. F45/Barry\'s/OTF/Solidcore stacking penalizes' },
-  { key: 'density',        name: 'Population Density',            max: 8,  hint: 'Sweet spot 8-25k per sq mi' },
-  { key: 'income',         name: 'Income Sweet Spot',             max: 10, hint: '$100-150k peak. Heavy penalty for ultra-luxury (>$200k) or low income' },
-  { key: 'lifestyle',      name: 'Lifestyle Clustering',          max: 8,  hint: 'Whole Foods, run clubs, wellness culture, athleisure' },
-  { key: 'housing',        name: 'Housing Mix',                   max: 6,  hint: 'Townhomes/condos/owned > student/short-term renter' },
-  { key: 'hybrid',         name: 'Hybrid Work Patterns',          max: 2,  hint: 'WFH %, predictable schedules, daytime presence' },
-  { key: 'trade_area',     name: 'Habit Corridor & Drive Access', max: 14, hint: 'Is location ON target customer daily path? Drive friction during class times? Pass-through traffic?' }
+  { key: 'stability',         name: 'Population Stability',          max: 18, hint: 'Homeownership %, residency length, married professionals (penalize single-adult dominance)' },
+  { key: 'psychographics',    name: 'Psychographic Fit',             max: 12, hint: '25-45 age mix, structured professionals, identity fit' },
+  { key: 'walkability',       name: 'Walkability/Habit',             max: 10, hint: 'TRUE urban village walkability — not strip mall stroad with high Walk Score' },
+  { key: 'competition',       name: 'Competition Saturation',        max: 9,  hint: 'Higher = less saturated. F45/Barry\'s/OTF/Solidcore stacking penalizes' },
+  { key: 'density',           name: 'Population Density',            max: 7,  hint: 'Sweet spot 8-25k per sq mi' },
+  { key: 'income',            name: 'Income Sweet Spot',             max: 10, hint: '$100-150k peak. Heavy penalty for ultra-luxury (>$200k) or low income' },
+  { key: 'lifestyle',         name: 'Lifestyle Clustering',          max: 8,  hint: 'Whole Foods, run clubs, wellness culture, athleisure' },
+  { key: 'housing',           name: 'Housing Mix',                   max: 6,  hint: 'Townhomes/condos/owned > student/short-term renter' },
+  { key: 'hybrid',            name: 'Hybrid Work Patterns',          max: 1,  hint: 'WFH %, predictable schedules, daytime presence' },
+  { key: 'trade_area',        name: 'Habit Corridor & Drive Access', max: 13, hint: 'On target customer daily path? Drive friction during class times? Pass-through traffic?' },
+  { key: 'market_momentum',   name: 'Market Momentum & Growth',      max: 6,  hint: 'Up-and-coming corridor? Population/HHI growth? New businesses? Fitness scene maturity?' }
 ];
 
 let BENCHMARKS = [];
@@ -226,9 +232,9 @@ let currentResult = null;
 
 function tierFromScore(score) {
   if (score >= 85) return { label: 'Strong Fit',  cls: 'tier-strong',   verdict: 'Alexandria-tier. Move on it.' };
-  if (score >= 75) return { label: 'Good Fit',    cls: 'tier-good',     verdict: '14th Street / Arlington tier. Likely succeeds with strong execution.' };
-  if (score >= 60) return { label: 'Marginal',    cls: 'tier-marginal', verdict: 'Dupont-tier. Depends heavily on GM and retention systems.' };
-  return                   { label: 'Risky',      cls: 'tier-risky',    verdict: 'Johns Creek-tier or worse. Profile shows the failure pattern. Strongly reconsider.' };
+  if (score >= 75) return { label: 'Good Fit',    cls: 'tier-good',     verdict: 'Austin St Elmo / 14th St tier. Likely runs 300+ members with strong execution.' };
+  if (score >= 60) return { label: 'Marginal',    cls: 'tier-marginal', verdict: 'Dupont / Asheville tier. Viable around 300 members but depends heavily on GM and retention systems.' };
+  return                   { label: 'Risky',      cls: 'tier-risky',    verdict: 'Anderson Ln / Johns Creek tier. Profile shows the underperformance or failure pattern. Strongly reconsider.' };
 }
 
 function similarityToBenchmark(siteScores, benchScores) {
@@ -323,7 +329,7 @@ async function runEvaluation() {
     currentEvidence = result.evidence || {};
     currentAddress = addr;
     renderResults(addr, result);
-    saveToHistory(addr, result.total);
+    saveToHistory(addr, result);
     setStatus('');
   } catch (e) {
     console.error(e);
@@ -480,23 +486,75 @@ document.getElementById('copy-btn').addEventListener('click', () => {
   });
 });
 
-// History
-const HIST_KEY = 'madabolic-site-evals-v2';
+// History — stores full evaluations, clickable to restore
+const HIST_KEY = 'madabolic-site-evals-v3';
 function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch { return []; } }
-function saveToHistory(address, score) {
+function saveToHistory(address, result) {
   const list = loadHistory();
-  list.unshift({ address, score, ts: new Date().toISOString() });
-  localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, 30)));
+  // De-dupe: if same address scored within last 60s, replace; otherwise prepend
+  const now = Date.now();
+  const filtered = list.filter(h => !(h.address === address && (now - new Date(h.ts).getTime()) < 60000));
+  filtered.unshift({ address, ts: new Date().toISOString(), result });
+  localStorage.setItem(HIST_KEY, JSON.stringify(filtered.slice(0, 30)));
   renderHistory();
+}
+function deleteFromHistory(idx) {
+  const list = loadHistory();
+  list.splice(idx, 1);
+  localStorage.setItem(HIST_KEY, JSON.stringify(list));
+  renderHistory();
+}
+function restoreFromHistory(idx) {
+  const list = loadHistory();
+  const entry = list[idx];
+  if (!entry || !entry.result) return;
+  currentResult = entry.result;
+  currentScores = entry.result.scores;
+  currentEvidence = entry.result.evidence || {};
+  currentAddress = entry.address;
+  addrInput.value = entry.address;
+  renderResults(entry.address, entry.result);
+  resultsEl.classList.add('show');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function tierClassFromScore(score) {
+  if (score >= 85) return 'tier-strong';
+  if (score >= 75) return 'tier-good';
+  if (score >= 60) return 'tier-marginal';
+  return 'tier-risky';
 }
 function renderHistory() {
   const list = loadHistory();
   const el = document.getElementById('history-list');
   if (!list.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;margin:0">No locations scored yet.</p>'; return; }
-  el.innerHTML = list.map(h => {
+  el.innerHTML = list.map((h, idx) => {
     const dateStr = new Date(h.ts).toLocaleDateString();
-    return `<div class="history-row"><span class="h-addr">${escapeHtml(h.address)}</span><span class="h-score">${h.score}</span><span class="h-date">${dateStr}</span></div>`;
+    const score = (h.result && h.result.total) || 0;
+    const tierCls = tierClassFromScore(score);
+    const tier = score >= 85 ? 'STRONG' : score >= 75 ? 'GOOD' : score >= 60 ? 'MARGINAL' : 'RISKY';
+    return `<div class="history-row" data-idx="${idx}">
+      <span class="h-tier ${tierCls}">${tier}</span>
+      <span class="h-addr">${escapeHtml(h.address)}</span>
+      <span class="h-score">${score}</span>
+      <span class="h-date">${dateStr}</span>
+      <span class="h-delete" data-delete="${idx}" title="Delete">×</span>
+    </div>`;
   }).join('');
+  // Attach handlers
+  el.querySelectorAll('.history-row').forEach(row => {
+    row.addEventListener('click', e => {
+      if (e.target.classList.contains('h-delete')) return; // delete handled separately
+      const idx = parseInt(row.dataset.idx, 10);
+      restoreFromHistory(idx);
+    });
+  });
+  el.querySelectorAll('.h-delete').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.delete, 10);
+      deleteFromHistory(idx);
+    });
+  });
 }
 
 runBtn.addEventListener('click', runEvaluation);
