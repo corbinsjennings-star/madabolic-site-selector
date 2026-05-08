@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MADabolic Site Selector</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f7f5f2;
+  --surface: #ffffff;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #e5e2dd;
+  --accent: #c4392b;
+  --accent-dark: #8a2519;
+  --gold: #b8893a;
+  --green: #2f7a3f;
+  --green-bg: #e8f3eb;
+  --amber: #c97a1f;
+  --red: #b53a2b;
+  --red-bg: #f9e4e0;
+  --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  font-size: 15px;
+}
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+header { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.5px; font-weight: 700; }
+.subtitle { color: var(--muted); font-size: 14px; margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.input-row { display: flex; gap: 10px; align-items: stretch; }
+input[type="text"] { flex: 1; padding: 12px 14px; font-size: 15px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-family: inherit; }
+input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+button { padding: 12px 20px; font-size: 14px; font-weight: 600; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+button:hover:not(:disabled) { background: var(--accent-dark); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+button.secondary:hover:not(:disabled) { background: var(--bg); }
+.status { margin-top: 14px; padding: 10px 14px; background: var(--bg); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--muted); display: none; }
+.status.show { display: block; }
+.results { display: none; }
+.results.show { display: block; }
+.score-hero { display: flex; align-items: center; gap: 24px; padding: 24px; background: linear-gradient(135deg, var(--surface), var(--bg)); }
+.score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; border: 6px solid var(--line); position: relative; }
+.score-num { font-size: 40px; font-weight: 700; line-height: 1; }
+.score-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.tier-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.tier-strong { background: var(--green-bg); color: var(--green); }
+.tier-good { background: #fdf3e3; color: var(--amber); }
+.tier-marginal { background: #fbe9d8; color: var(--amber); }
+.tier-risky { background: var(--red-bg); color: var(--red); }
+.score-summary { flex: 1; }
+.score-summary h2 { margin: 0 0 6px; font-size: 18px; word-break: break-word; }
+.score-summary p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; margin: 0 0 12px; }
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pros-cons > div { background: var(--bg); border-radius: 8px; padding: 16px; border: 1px solid var(--line); }
+.pros-cons h3 { margin: 0 0 12px; font-size: 14px; }
+.pros-cons h3.pros-h { color: var(--green); }
+.pros-cons h3.cons-h { color: var(--red); }
+.pros-cons ul { list-style: none; padding: 0; margin: 0; }
+.pros-cons li { padding: 8px 0 8px 24px; position: relative; font-size: 13px; line-height: 1.5; border-top: 1px solid var(--line); }
+.pros-cons li:first-child { border-top: none; }
+.pros-cons .pros-list li::before { content: '+'; position: absolute; left: 4px; top: 8px; color: var(--green); font-weight: 700; }
+.pros-cons .cons-list li::before { content: '−'; position: absolute; left: 4px; top: 8px; color: var(--red); font-weight: 700; }
+.var-row { display: grid; grid-template-columns: 200px 1fr 60px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.var-row:last-child { border: none; }
+.var-name { font-size: 13px; font-weight: 500; }
+.var-bar-track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; position: relative; }
+.var-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s; }
+.var-score { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.var-evidence { font-size: 11px; color: var(--muted); grid-column: 1 / -1; padding-left: 0; margin-top: -2px; line-height: 1.4; font-style: italic; }
+.benchmark-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.bench-card { padding: 14px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
+.bench-card.match { border-color: var(--accent); background: #fdf3f1; }
+.bench-name { font-weight: 600; font-size: 14px; margin: 0 0 4px; }
+.bench-tier-tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.bench-tier-top { background: var(--green-bg); color: var(--green); }
+.bench-tier-mid { background: #fdf3e3; color: var(--amber); }
+.bench-tier-low { background: var(--red-bg); color: var(--red); }
+.bench-tier-unknown { background: var(--line); color: var(--muted); }
+.bench-score { font-size: 22px; font-weight: 700; color: var(--ink); }
+.bench-similarity { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.bench-card.match .bench-similarity { color: var(--accent); font-weight: 600; }
+.match-callout { padding: 14px 18px; background: #fdf3f1; border-left: 3px solid var(--accent); border-radius: 4px; margin-bottom: 16px; font-size: 14px; line-height: 1.5; }
+.match-callout strong { color: var(--accent); }
+.verdict { padding: 16px 18px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
+.history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
+.history-row .h-addr { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
+.history-row .h-score { font-weight: 700; min-width: 40px; text-align: right; }
+.history-row .h-date { color: var(--muted); font-size: 12px; min-width: 100px; text-align: right; }
+.toggle-btn { background: none; color: var(--muted); padding: 6px 10px; font-size: 12px; border: 1px solid var(--line); }
+.toggle-btn:hover { background: var(--bg); }
+.manual-panel { display: none; margin-top: 12px; padding: 16px; background: var(--bg); border-radius: 8px; }
+.manual-panel.show { display: block; }
+.manual-row { display: grid; grid-template-columns: 220px 1fr 60px 60px; gap: 10px; align-items: center; padding: 6px 0; }
+.manual-row label { font-size: 13px; }
+.manual-row .hint { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; font-weight: normal; }
+.manual-row input[type="range"] { width: 100%; }
+.manual-row .manual-value { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
+.manual-row .manual-max { font-size: 11px; text-align: right; color: var(--muted); }
+.error { padding: 12px 14px; background: var(--red-bg); border-left: 3px solid var(--red); border-radius: 4px; color: var(--red); font-size: 13px; margin-top: 12px; }
+.actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.empty-state { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) {
+  .var-row { grid-template-columns: 130px 1fr 50px; }
+  .manual-row { grid-template-columns: 1fr 100px 50px; }
+  .manual-row label { grid-column: 1 / -1; }
+  .score-hero { flex-direction: column; align-items: flex-start; }
+  .pros-cons { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>MADabolic Site Selector</h1>
+  <p class="subtitle">Enter a prospective address. Get a 0 to 100 success score, pros and cons, and benchmark against existing locations.</p>
+</header>
+
+<div class="card">
+  <label for="addr" class="section-title">Prospective Address</label>
+  <div class="input-row">
+    <input id="addr" type="text" placeholder="e.g. 1234 King Street, Charleston SC" />
+    <button id="run-btn">Score</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div id="error-box"></div>
+</div>
+
+<div class="results" id="results">
+  <div class="card">
+    <div class="score-hero">
+      <div class="score-circle" id="score-circle">
+        <div class="score-num" id="score-num">—</div>
+        <div class="score-label">out of 100</div>
+      </div>
+      <div class="score-summary">
+        <span class="tier-badge" id="tier-badge">—</span>
+        <h2 id="addr-display">—</h2>
+        <p id="quick-take">—</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Verdict</div>
+    <div class="verdict" id="verdict">—</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Pros and Cons</div>
+    <div class="pros-cons">
+      <div>
+        <h3 class="pros-h">Pros</h3>
+        <ul class="pros-list" id="pros-list"></ul>
+      </div>
+      <div>
+        <h3 class="cons-h">Cons / Risks</h3>
+        <ul class="cons-list" id="cons-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="match-callout" id="match-callout"></div>
+    <div class="section-title">Benchmark vs Existing Locations</div>
+    <div class="benchmark-grid" id="benchmark-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Score Breakdown</div>
+    <div id="breakdown"></div>
+    <div class="actions">
+      <button class="toggle-btn" id="toggle-manual">Adjust scores manually</button>
+      <button class="secondary" id="copy-btn">Copy summary</button>
+    </div>
+    <div class="manual-panel" id="manual-panel"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Past Evaluations</div>
+  <div id="history-list"><p style="color:var(--muted);font-size:13px;margin:0">No locations scored yet.</p></div>
+</div>
+
+<div class="card">
+  <div class="section-title">Benchmark Locations on File</div>
+  <div id="locations-list"><p class="empty-state">Loading...</p></div>
+</div>
+
+</div>
+
+<script>
+// ====== SCORING FRAMEWORK (must match server) ======
+const VARIABLES = [
+  { key: 'stability',      name: 'Population Stability',   max: 20, hint: 'Homeownership %, residency length, married professionals' },
+  { key: 'psychographics', name: 'Psychographic Fit',      max: 15, hint: '25-45 age mix, structured professionals, identity fit' },
+  { key: 'walkability',    name: 'Walkability/Habit',      max: 12, hint: 'Walk Score, daily anchors, mixed-use density' },
+  { key: 'competition',    name: 'Competition Saturation', max: 10, hint: 'Higher = less saturated. F45/Barry\'s/OTF/Solidcore stacking penalizes' },
+  { key: 'density',        name: 'Population Density',     max: 10, hint: 'Sweet spot 8-25k per sq mi' },
+  { key: 'income',         name: 'Income Sweet Spot',      max: 10, hint: '$100-150k peak. Penalty for ultra-luxury or low income' },
+  { key: 'lifestyle',      name: 'Lifestyle Clustering',   max: 10, hint: 'Whole Foods, run clubs, wellness culture, athleisure' },
+  { key: 'housing',        name: 'Housing Mix',            max: 8,  hint: 'Townhomes/condos/owned > student/short-term renter' },
+  { key: 'hybrid',         name: 'Hybrid Work Patterns',   max: 5,  hint: 'WFH %, predictable schedules, daytime presence' }
+];
+
+let BENCHMARKS = [];
+let currentScores = null;
+let currentEvidence = {};
+let currentAddress = null;
+let currentResult = null;
+
+function tierFromScore(score) {
+  if (score >= 85) return { label: 'Strong Fit',  cls: 'tier-strong',   verdict: 'Alexandria-tier. Move on it.' };
+  if (score >= 75) return { label: 'Good Fit',    cls: 'tier-good',     verdict: '14th Street / Arlington tier. Likely succeeds with strong execution.' };
+  if (score >= 65) return { label: 'Marginal',    cls: 'tier-marginal', verdict: 'Dupont-tier. Depends heavily on GM and retention systems.' };
+  return                   { label: 'Risky',      cls: 'tier-risky',    verdict: 'Profile is below your weakest current location. Rethink.' };
+}
+
+function similarityToBenchmark(siteScores, benchScores) {
+  let dist = 0, totalWeight = 0;
+  VARIABLES.forEach(v => {
+    const a = (siteScores[v.key] || 0) / v.max;
+    const b = (benchScores[v.key] || 0) / v.max;
+    dist += Math.pow(a - b, 2) * v.max;
+    totalWeight += v.max;
+  });
+  return Math.max(0, Math.round((1 - Math.sqrt(dist / totalWeight)) * 100));
+}
+
+function totalScore(scores) {
+  return VARIABLES.reduce((sum, v) => sum + (scores[v.key] || 0), 0);
+}
+function benchTotal(b) {
+  if (!b.demographic_scores) return null;
+  return VARIABLES.reduce((s, v) => s + (b.demographic_scores[v.key] || 0), 0);
+}
+
+// ====== LOAD BENCHMARKS ======
+async function loadBenchmarks() {
+  try {
+    const res = await fetch('/api/locations');
+    const data = await res.json();
+    BENCHMARKS = (data.locations || []).filter(l => l.demographic_scores).map(l => ({ ...l, total: benchTotal(l) }));
+    renderLocationsList(data.locations || []);
+  } catch (e) {
+    console.error('Failed to load benchmarks:', e);
+    document.getElementById('locations-list').innerHTML = '<p class="empty-state">Could not load benchmark locations from server.</p>';
+  }
+}
+
+function renderLocationsList(locations) {
+  const el = document.getElementById('locations-list');
+  if (!locations.length) { el.innerHTML = '<p class="empty-state">No locations on file yet.</p>'; return; }
+  el.innerHTML = `<p style="font-size:13px;color:var(--muted);margin:0 0 10px">${locations.length} location${locations.length === 1 ? '' : 's'} on file.</p>` +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">' +
+    locations.map(l => {
+      const tierCls = l.performance_tier === 'top' ? 'bench-tier-top' :
+                      l.performance_tier === 'mid' ? 'bench-tier-mid' :
+                      l.performance_tier === 'low' ? 'bench-tier-low' : 'bench-tier-unknown';
+      const total = benchTotal(l);
+      return `<div style="padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--line)">
+        <div style="font-weight:600;font-size:13px;margin-bottom:4px">${l.studio_address || l.id}</div>
+        <span class="bench-tier-tag ${tierCls}">${l.performance_tier || 'unrated'}</span>
+        ${total !== null ? `<span style="font-size:13px;color:var(--muted);margin-left:6px">${total}/100</span>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ====== UI ======
+const statusEl = document.getElementById('status');
+const errorBox = document.getElementById('error-box');
+const resultsEl = document.getElementById('results');
+const runBtn = document.getElementById('run-btn');
+const addrInput = document.getElementById('addr');
+
+function setStatus(msg, withSpinner = false) {
+  if (!msg) { statusEl.classList.remove('show'); statusEl.innerHTML = ''; return; }
+  statusEl.innerHTML = (withSpinner ? '<span class="spinner"></span>' : '') + msg;
+  statusEl.classList.add('show');
+}
+function setError(msg) {
+  errorBox.innerHTML = msg ? `<div class="error">${msg}</div>` : '';
+}
+
+async function runEvaluation() {
+  const addr = addrInput.value.trim();
+  if (!addr) { setError('Enter an address first.'); return; }
+  setError('');
+  resultsEl.classList.remove('show');
+  runBtn.disabled = true;
+  runBtn.textContent = 'Researching...';
+  setStatus('Researching demographics, walkability, competition, and lifestyle data...', true);
+
+  try {
+    const res = await fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: addr })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Server returned ${res.status}`);
+    }
+    const result = await res.json();
+    currentResult = result;
+    currentScores = result.scores;
+    currentEvidence = result.evidence || {};
+    currentAddress = addr;
+    renderResults(addr, result);
+    saveToHistory(addr, result.total);
+    setStatus('');
+  } catch (e) {
+    console.error(e);
+    setError('Scoring failed: ' + e.message);
+    setStatus('');
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = 'Score';
+  }
+}
+
+function renderResults(address, result) {
+  const total = result.total;
+  const tier = tierFromScore(total);
+
+  document.getElementById('score-num').textContent = total;
+  document.getElementById('addr-display').textContent = address;
+  document.getElementById('quick-take').textContent = tier.verdict;
+
+  const badge = document.getElementById('tier-badge');
+  badge.textContent = result.tier || tier.label;
+  badge.className = 'tier-badge ' + tier.cls;
+
+  const circle = document.getElementById('score-circle');
+  const colors = { 'tier-strong': 'var(--green)', 'tier-good': 'var(--gold)', 'tier-marginal': 'var(--amber)', 'tier-risky': 'var(--red)' };
+  circle.style.borderColor = colors[tier.cls];
+
+  // Verdict
+  document.getElementById('verdict').textContent = result.verdict + (result.confidence ? `\n\nConfidence: ${result.confidence}` : '');
+
+  // Pros/cons
+  document.getElementById('pros-list').innerHTML = (result.pros || []).map(p => `<li>${escapeHtml(p)}</li>`).join('') || '<li style="color:var(--muted)">No pros listed.</li>';
+  document.getElementById('cons-list').innerHTML = (result.cons || []).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li style="color:var(--muted)">No cons listed.</li>';
+
+  // Breakdown bars
+  renderBreakdown();
+
+  // Benchmarks
+  renderBenchmarks(result.most_similar_location);
+
+  buildManualPanel(result.scores);
+
+  resultsEl.classList.add('show');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderBreakdown() {
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = VARIABLES.map(v => {
+    const pts = currentScores[v.key] || 0;
+    const pct = (pts / v.max) * 100;
+    const evidence = currentEvidence[v.key] || '';
+    return `<div class="var-row" title="${(evidence || v.hint).replace(/"/g,'&quot;')}">
+      <div class="var-name">${v.name}</div>
+      <div class="var-bar-track"><div class="var-bar-fill" style="width:${pct}%"></div></div>
+      <div class="var-score">${pts} / ${v.max}</div>
+      ${evidence ? `<div class="var-evidence">${escapeHtml(evidence)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderBenchmarks(serverMatchHint) {
+  if (!BENCHMARKS.length) {
+    document.getElementById('match-callout').innerHTML = 'No benchmark locations available.';
+    document.getElementById('benchmark-grid').innerHTML = '';
+    return;
+  }
+  const benchScored = BENCHMARKS.map(b => ({ ...b, similarity: similarityToBenchmark(currentScores, b.demographic_scores) })).sort((a,b) => b.similarity - a.similarity);
+  const topMatch = benchScored[0];
+  const matchLabel = serverMatchHint || topMatch.studio_address;
+  document.getElementById('match-callout').innerHTML = `This site profile most resembles <strong>${escapeHtml(matchLabel)}</strong> (${topMatch.similarity}% similarity by score profile). ${escapeHtml(topMatch.performance_label || '')}`;
+  document.getElementById('benchmark-grid').innerHTML = benchScored.map((b, i) => {
+    const tierCls = b.performance_tier === 'top' ? 'bench-tier-top' :
+                    b.performance_tier === 'mid' ? 'bench-tier-mid' :
+                    b.performance_tier === 'low' ? 'bench-tier-low' : 'bench-tier-unknown';
+    return `<div class="bench-card ${i === 0 ? 'match' : ''}">
+      <span class="bench-tier-tag ${tierCls}">${b.performance_tier || 'unrated'}</span>
+      <p class="bench-name">${escapeHtml(b.studio_address || b.id)}</p>
+      <div class="bench-score">${b.total}</div>
+      <div class="bench-similarity">${b.similarity}% similar</div>
+    </div>`;
+  }).join('');
+}
+
+function buildManualPanel(scores) {
+  const panel = document.getElementById('manual-panel');
+  panel.innerHTML = VARIABLES.map(v => `
+    <div class="manual-row">
+      <label for="m-${v.key}">${v.name}<span class="hint">${v.hint}</span></label>
+      <input type="range" id="m-${v.key}" min="0" max="${v.max}" step="1" value="${scores[v.key] || 0}" data-key="${v.key}" />
+      <span class="manual-value" id="mv-${v.key}">${scores[v.key] || 0}</span>
+      <span class="manual-max">/ ${v.max}</span>
+    </div>
+  `).join('');
+  panel.querySelectorAll('input[type="range"]').forEach(input => {
+    input.addEventListener('input', e => {
+      const k = e.target.dataset.key;
+      const val = parseInt(e.target.value, 10);
+      currentScores[k] = val;
+      document.getElementById('mv-' + k).textContent = val;
+      updateDisplay();
+    });
+  });
+}
+
+function updateDisplay() {
+  const total = totalScore(currentScores);
+  const tier = tierFromScore(total);
+  document.getElementById('score-num').textContent = total;
+  document.getElementById('quick-take').textContent = tier.verdict;
+  const badge = document.getElementById('tier-badge');
+  badge.textContent = tier.label;
+  badge.className = 'tier-badge ' + tier.cls;
+  const colors = { 'tier-strong': 'var(--green)', 'tier-good': 'var(--gold)', 'tier-marginal': 'var(--amber)', 'tier-risky': 'var(--red)' };
+  document.getElementById('score-circle').style.borderColor = colors[tier.cls];
+  renderBreakdown();
+  renderBenchmarks(null);
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+}
+
+document.getElementById('toggle-manual').addEventListener('click', () => {
+  document.getElementById('manual-panel').classList.toggle('show');
+});
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+  if (!currentScores) return;
+  const total = totalScore(currentScores);
+  const tier = tierFromScore(total);
+  const lines = [
+    `MADabolic Site Eval — ${currentAddress}`,
+    `Score: ${total}/100  (${tier.label})`,
+    '',
+    'Verdict:',
+    document.getElementById('verdict').textContent,
+    '',
+    'Pros:',
+    ...((currentResult && currentResult.pros) || []).map(p => `  + ${p}`),
+    '',
+    'Cons / Risks:',
+    ...((currentResult && currentResult.cons) || []).map(c => `  - ${c}`),
+    '',
+    'Breakdown:',
+    ...VARIABLES.map(v => `  ${v.name}: ${currentScores[v.key]}/${v.max}`)
+  ];
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+});
+
+// History
+const HIST_KEY = 'madabolic-site-evals-v2';
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch { return []; } }
+function saveToHistory(address, score) {
+  const list = loadHistory();
+  list.unshift({ address, score, ts: new Date().toISOString() });
+  localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, 30)));
+  renderHistory();
+}
+function renderHistory() {
+  const list = loadHistory();
+  const el = document.getElementById('history-list');
+  if (!list.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px;margin:0">No locations scored yet.</p>'; return; }
+  el.innerHTML = list.map(h => {
+    const dateStr = new Date(h.ts).toLocaleDateString();
+    return `<div class="history-row"><span class="h-addr">${escapeHtml(h.address)}</span><span class="h-score">${h.score}</span><span class="h-date">${dateStr}</span></div>`;
+  }).join('');
+}
+
+runBtn.addEventListener('click', runEvaluation);
+addrInput.addEventListener('keydown', e => { if (e.key === 'Enter') runEvaluation(); });
+
+// Boot
+loadBenchmarks();
+renderHistory();
+</script>
+</body>
+</html>
