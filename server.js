@@ -29,6 +29,42 @@ function ensureStore() {
     const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
     fs.writeFileSync(STORE_PATH, JSON.stringify(seed, null, 2));
     console.log('[store] Initialized from seed');
+    return;
+  }
+  // Migration: merge any new seed locations OR new demographic_scores fields into existing store.
+  // Preserves runtime-added data (franchisee submissions, manual edits).
+  try {
+    const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
+    const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    let changed = false;
+    for (const seedLoc of (seed.locations || [])) {
+      const existing = (store.locations || []).find(l => l.id === seedLoc.id);
+      if (!existing) {
+        store.locations.push(seedLoc);
+        console.log('[store] Migration: added new seed location', seedLoc.id);
+        changed = true;
+      } else if (seedLoc.demographic_scores) {
+        // Refresh demographic_scores from seed (the framework may have evolved)
+        const oldScores = existing.demographic_scores || {};
+        const newScores = seedLoc.demographic_scores;
+        const oldKeys = Object.keys(oldScores).sort().join(',');
+        const newKeys = Object.keys(newScores).sort().join(',');
+        if (oldKeys !== newKeys) {
+          existing.demographic_scores = newScores;
+          existing.performance_tier = seedLoc.performance_tier || existing.performance_tier;
+          existing.performance_label = seedLoc.performance_label || existing.performance_label;
+          existing.notes = seedLoc.notes || existing.notes;
+          console.log('[store] Migration: refreshed demographic_scores for', seedLoc.id);
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+      console.log('[store] Migration: changes saved');
+    }
+  } catch (e) {
+    console.warn('[store] Migration check failed:', e.message);
   }
 }
 function loadStore() {
@@ -61,15 +97,16 @@ function newId(prefix = 'loc') {
 
 // ============ SCORING FRAMEWORK ============
 const VARIABLES = [
-  { key: 'stability',      name: 'Population Stability',   max: 20 },
-  { key: 'psychographics', name: 'Psychographic Fit',      max: 15 },
-  { key: 'walkability',    name: 'Walkability/Habit',      max: 12 },
-  { key: 'competition',    name: 'Competition Saturation', max: 10 },
-  { key: 'density',        name: 'Population Density',     max: 10 },
-  { key: 'income',         name: 'Income Sweet Spot',      max: 10 },
-  { key: 'lifestyle',      name: 'Lifestyle Clustering',   max: 10 },
-  { key: 'housing',        name: 'Housing Mix',            max: 8  },
-  { key: 'hybrid',         name: 'Hybrid Work Patterns',   max: 5  }
+  { key: 'stability',      name: 'Population Stability',          max: 20 },
+  { key: 'psychographics', name: 'Psychographic Fit',             max: 13 },
+  { key: 'walkability',    name: 'Walkability/Habit',             max: 10 },
+  { key: 'competition',    name: 'Competition Saturation',        max: 9  },
+  { key: 'density',        name: 'Population Density',            max: 8  },
+  { key: 'income',         name: 'Income Sweet Spot',             max: 10 },
+  { key: 'lifestyle',      name: 'Lifestyle Clustering',          max: 8  },
+  { key: 'housing',        name: 'Housing Mix',                   max: 6  },
+  { key: 'hybrid',         name: 'Hybrid Work Patterns',          max: 2  },
+  { key: 'trade_area',     name: 'Habit Corridor & Drive Access', max: 14 }
 ];
 
 function totalScore(scores) {
@@ -78,57 +115,71 @@ function totalScore(scores) {
 function tierFromScore(score) {
   if (score >= 85) return 'Strong Fit';
   if (score >= 75) return 'Good Fit';
-  if (score >= 65) return 'Marginal';
+  if (score >= 60) return 'Marginal';
   return 'Risky';
 }
 
 function buildScoringPrompt(address, benchmarks) {
   const benchSummary = benchmarks.map(b => {
     const total = b.demographic_scores ? VARIABLES.reduce((s,v) => s + (b.demographic_scores[v.key] || 0), 0) : 0;
-    return `- ${b.studio_address}: ${total}/100. ${b.performance_tier === 'top' ? 'Top performer.' : b.performance_tier === 'mid' ? 'Mid-tier.' : 'Underperforms.'} ${b.notes || ''}`;
+    const tierLabel = b.performance_tier === 'top' ? 'TOP PERFORMER' :
+                      b.performance_tier === 'mid' ? 'MID-TIER' :
+                      b.performance_tier === 'low' ? 'UNDERPERFORMS' :
+                      b.performance_tier === 'failed' ? 'FAILED — CLOSED' : 'UNRATED';
+    return `- ${b.studio_address}: ${total}/100. ${tierLabel}. ${b.notes || ''}`;
   }).join('\n');
 
   return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. Score the prospective location at "${address}" for likelihood of success.
 
 MADabolic wins in markets that are:
-- Affluent but not ultra-elite. Sweet spot household income $100k-$150k. Above $250k median fragments to country clubs and private trainers.
+- Affluent but not ultra-elite. Sweet spot household income $100k-$150k. Above $200k median fragments aggressively to country clubs, private trainers, Equinox, Lifetime Fitness — DOWNGRADE these markets even if every other metric looks great.
 - Stable and routine-driven. High homeownership, married professionals, long average residency. Transient populations destroy retention.
 - Walkable urban villages with daily habit corridors (coffee, grocery, residential mix near studio).
 - Moderate fitness culture, not oversaturated with F45, Barry's, Orangetheory, Solidcore, Burn Boot Camp.
 - Age 25-45 sweet spot, peaking 32-38. Members want progression, structure, identity, real strength, not random HIIT chaos.
 - Wellness culture indicators: Whole Foods, Trader Joe's, run clubs, healthy restaurants, athleisure visibility.
 
-Existing MADabolic locations as benchmarks:
+CRITICAL LESSON FROM A FAILED LOCATION:
+The Johns Creek GA location FAILED despite strong demographics on paper. Why: target customers actually lived in central Alpharetta or western Johns Creek, NOT in the immediate area of the studio. Eastern State Bridge corridor is retail/office, not the residential cluster of the target demo. Heavy commute-hour traffic blocked access during key class times (6am, 5-7pm). Pass-through traffic volume at the exact spot was lower than the broader corridor suggested. Income skewed above sweet spot ($182k+ median) compounded with country-club fragmentation. THE LESSON: demographic catchment alone does NOT save a location if it's off-path from where target demo actually lives, OR if drive friction during class times is severe. SUBURBAN SPRAWL LOCATIONS (Walk Score below 30, density below 4k/sq mi, drive-only access) should score severely on Habit Corridor & Drive Access regardless of how good the broader trade area looks on paper.
+
+Existing MADabolic locations as benchmarks (use these as calibration anchors):
 ${benchSummary}
 
 YOUR TASK:
-1. Use web search to research "${address}" — pull demographics (median household income, age distribution, homeownership %), Walk Score, boutique fitness competition within 1-2 miles, neighborhood archetype, housing mix.
-2. Score across these 9 variables (totals to 100 points):
-   - stability (max 20): Homeownership %, residency length, married professionals, established families. Higher = more rooted.
-   - psychographics (max 15): Fit with target member — career-driven 25-45 professionals, structured personalities.
-   - walkability (max 12): Walk Score, daily anchors, mixed-use density.
-   - competition (max 10): INVERSE — higher score = LESS saturated. Heavy stacking of F45/Barry's/OTF/Solidcore = low score.
-   - density (max 10): Population per sq mi. Sweet spot 8k-25k.
-   - income (max 10): Median HHI sweet spot $100-150k. Penalty for ultra-luxury or low income.
-   - lifestyle (max 10): Wellness culture indicators.
-   - housing (max 8): Townhomes/condos/owned > student/short-term renter.
-   - hybrid (max 5): Hybrid/remote work patterns, predictable schedules.
-3. Identify which existing MADabolic location it most resembles in profile.
+1. Use web search to research "${address}" — pull demographics (median household income, age distribution, homeownership %), Walk Score, boutique fitness competition within 1-2 miles, neighborhood archetype, housing mix, traffic patterns, where the target demo actually clusters relative to the address.
+2. Score across these 10 variables (totals to 100 points):
+   - stability (max 20): Homeownership %, residency length, married professionals, established families IN THE IMMEDIATE 1-MILE TRADE AREA. Higher = more rooted.
+   - psychographics (max 13): Fit with target member — career-driven 25-45 professionals in immediate area. Penalize if median age is over 42 or under 28.
+   - walkability (max 10): Walk Score, daily anchors, mixed-use density. Score 0-2 for car-dependent suburban sprawl.
+   - competition (max 9): INVERSE — higher score = LESS saturated. Heavy stacking of F45/Barry's/OTF/Solidcore = low score.
+   - density (max 8): Population per sq mi. Sweet spot 8k-25k. Score 0-2 below 4k/sq mi.
+   - income (max 10): Median HHI sweet spot $100-150k peaks at 10. Above $200k median: drop to 3-5. Below $75k: drop to 4-6.
+   - lifestyle (max 8): Wellness culture indicators (Whole Foods, run clubs, athleisure, healthy restaurants).
+   - housing (max 6): Townhomes/condos/owned > student/short-term renter.
+   - hybrid (max 2): Hybrid/remote work patterns, predictable schedules.
+   - trade_area (max 14): NEW VARIABLE. Habit Corridor & Drive Access. Score on these factors:
+     * Is the location IN the daily routine path of the target demo, or off to the side requiring a detour?
+     * Drive-time from the primary target residential clusters during peak hours (6am, noon, 5-7pm class times)?
+     * Pass-through traffic volume at THIS EXACT SPOT (not just the corridor average)?
+     * Is this a destination people drive TO, or a place they pass naturally during their daily routine?
+     Off-path suburban locations with bad commute-hour access should score 1-4 here. Urban villages on commute corridors should score 11-14.
+3. Identify which existing MADabolic location it most resembles in profile (including the FAILED Johns Creek location if the profile matches).
 4. List 4-6 specific, concrete PROS (real reasons it could succeed at this address — cite actual data found).
-5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found).
+5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found, especially any trade area / habit corridor mismatches).
 
 Return ONLY valid JSON, no markdown, no other text:
 {
   "scores": {
     "stability": <number 0-20>,
-    "psychographics": <number 0-15>,
-    "walkability": <number 0-12>,
-    "competition": <number 0-10>,
-    "density": <number 0-10>,
+    "psychographics": <number 0-13>,
+    "walkability": <number 0-10>,
+    "competition": <number 0-9>,
+    "density": <number 0-8>,
     "income": <number 0-10>,
-    "lifestyle": <number 0-10>,
-    "housing": <number 0-8>,
-    "hybrid": <number 0-5>
+    "lifestyle": <number 0-8>,
+    "housing": <number 0-6>,
+    "hybrid": <number 0-2>,
+    "trade_area": <number 0-14>
   },
   "evidence": {
     "stability": "1-sentence specific reason citing data",
@@ -139,7 +190,8 @@ Return ONLY valid JSON, no markdown, no other text:
     "income": "...",
     "lifestyle": "...",
     "housing": "...",
-    "hybrid": "..."
+    "hybrid": "...",
+    "trade_area": "..."
   },
   "most_similar_location": "<exact studio_address from benchmarks above>",
   "similarity_explanation": "1-2 sentences on why this profile matches that existing location",

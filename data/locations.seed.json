@@ -25,16 +25,17 @@
       "parking_issue": "",
       "demographic_scores": {
         "stability": 18,
-        "psychographics": 14,
-        "walkability": 11,
-        "competition": 8,
-        "density": 8,
+        "psychographics": 12,
+        "walkability": 9,
+        "competition": 7,
+        "density": 7,
         "income": 9,
-        "lifestyle": 9,
-        "housing": 7,
-        "hybrid": 4
+        "lifestyle": 7,
+        "housing": 5,
+        "hybrid": 2,
+        "trade_area": 13
       },
-      "notes": "Affluent, stable, routine-driven urban village. Ideal MADabolic demographic profile. High homeownership, married professionals, long average residency. Best long-term retention.",
+      "notes": "Affluent, stable, routine-driven urban village. Ideal MADabolic demographic profile. High homeownership, married professionals, long average residency. Old Town is exactly the kind of habit corridor target customers walk and drive past constantly. Best long-term retention.",
       "source": "seed"
     },
     {
@@ -62,16 +63,17 @@
       "parking_issue": "",
       "demographic_scores": {
         "stability": 13,
-        "psychographics": 12,
-        "walkability": 12,
-        "competition": 6,
-        "density": 10,
+        "psychographics": 10,
+        "walkability": 10,
+        "competition": 5,
+        "density": 8,
         "income": 9,
-        "lifestyle": 10,
-        "housing": 5,
-        "hybrid": 4
+        "lifestyle": 8,
+        "housing": 4,
+        "hybrid": 2,
+        "trade_area": 13
       },
-      "notes": "Extremely dense, high visibility, social energy. Young professionals with disposable income. Density and visibility overwhelm transient/churn risk.",
+      "notes": "Extremely dense, high visibility, social energy. Young professionals with disposable income. On major commute paths with massive pass-through traffic. Density and visibility overwhelm transient/churn risk.",
       "source": "seed"
     },
     {
@@ -99,16 +101,17 @@
       "parking_issue": "",
       "demographic_scores": {
         "stability": 14,
-        "psychographics": 12,
-        "walkability": 9,
+        "psychographics": 10,
+        "walkability": 8,
         "competition": 5,
-        "density": 9,
+        "density": 7,
         "income": 9,
-        "lifestyle": 8,
-        "housing": 6,
-        "hybrid": 4
+        "lifestyle": 6,
+        "housing": 5,
+        "hybrid": 2,
+        "trade_area": 11
       },
-      "notes": "Strong demographics on paper. Educated young professionals. Held back by extreme boutique fitness saturation and apartment-heavy housing mix.",
+      "notes": "Strong demographics on paper. Educated young professionals. Held back by extreme boutique fitness saturation and apartment-heavy housing mix. Decent corridor position but more sprawl than 14th Street or Alexandria.",
       "source": "seed"
     },
     {
@@ -136,16 +139,17 @@
       "parking_issue": "",
       "demographic_scores": {
         "stability": 11,
-        "psychographics": 10,
-        "walkability": 11,
-        "competition": 6,
-        "density": 10,
-        "income": 8,
-        "lifestyle": 8,
-        "housing": 5,
-        "hybrid": 4
+        "psychographics": 9,
+        "walkability": 9,
+        "competition": 5,
+        "density": 8,
+        "income": 7,
+        "lifestyle": 6,
+        "housing": 4,
+        "hybrid": 2,
+        "trade_area": 11
       },
-      "notes": "Educated, affluent, dense. Underperforms relative to demographics. Likely a mix of transient population, socially fragmented routines, and execution variance.",
+      "notes": "Educated, affluent, dense. Underperforms relative to demographics. Likely a mix of transient population, socially fragmented routines, and execution variance. Urban core position with target customers nearby.",
       "source": "seed"
     },
     {
@@ -173,16 +177,55 @@
       "parking_issue": "",
       "demographic_scores": {
         "stability": 9,
-        "psychographics": 8,
-        "walkability": 10,
-        "competition": 7,
-        "density": 8,
-        "income": 7,
-        "lifestyle": 7,
-        "housing": 5,
-        "hybrid": 3
+        "psychographics": 7,
+        "walkability": 8,
+        "competition": 6,
+        "density": 6,
+        "income": 6,
+        "lifestyle": 5,
+        "housing": 4,
+        "hybrid": 1,
+        "trade_area": 9
       },
-      "notes": "Trendy, younger, nightlife energy. More novelty-driven, less stable routines. Better top-of-funnel than long-term LTV.",
+      "notes": "Trendy, younger, nightlife energy. More novelty-driven, less stable routines. Better top-of-funnel than long-term LTV. Trendy corridor but stable target demo less concentrated in immediate area.",
+      "source": "seed"
+    },
+    {
+      "id": "johns-creek-ga-failed",
+      "studio_address": "MADabolic Johns Creek, GA (CLOSED) — 10945 State Bridge Rd, Johns Creek GA 30022",
+      "neighborhood": "State Bridge Road, eastern Johns Creek",
+      "city": "Johns Creek",
+      "state": "GA",
+      "performance_tier": "failed",
+      "performance_label": "FAILED — closed location, cautionary tale",
+      "opened_date": "",
+      "class_capacity": 25,
+      "price_12_month": null,
+      "price_month_to_month": null,
+      "current_members": null,
+      "peak_members": null,
+      "avg_leads": null,
+      "avg_trials": null,
+      "avg_new_members": null,
+      "avg_terminations": null,
+      "commitment_split": "",
+      "gender_split": "",
+      "avg_member_age": null,
+      "competitors_2mi": "",
+      "parking_issue": "",
+      "demographic_scores": {
+        "stability": 10,
+        "psychographics": 6,
+        "walkability": 1,
+        "competition": 5,
+        "density": 2,
+        "income": 4,
+        "lifestyle": 5,
+        "housing": 5,
+        "hybrid": 1,
+        "trade_area": 2
+      },
+      "notes": "FAILED LOCATION. Looked great on paper, demographics were strong (high homeownership, families, affluent). But target customers actually lived in central Alpharetta or western Johns Creek, NOT in the immediate area of the studio. Eastern State Bridge corridor is retail/office, not residential cluster. Heavy traffic during commute hours (key class times: 6am, 5-7pm) made access painful for prospects. Pass-through traffic volume at this exact spot was lower than the broader corridor suggests. Classic case of demographic catchment looking right while habit corridor and drive friction were terminal. Income skew above sweet spot ($182k+ median) compounded the issue with country club / private trainer fragmentation. KEY LESSON: stability + income + housing alone do not save a location with bad trade-area-to-target-residential alignment.",
       "source": "seed"
     }
   ]

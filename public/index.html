@@ -86,6 +86,7 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 .bench-tier-top { background: var(--green-bg); color: var(--green); }
 .bench-tier-mid { background: #fdf3e3; color: var(--amber); }
 .bench-tier-low { background: var(--red-bg); color: var(--red); }
+.bench-tier-failed { background: #1a1a1a; color: #ff6b58; font-weight: 700; }
 .bench-tier-unknown { background: var(--line); color: var(--muted); }
 .bench-score { font-size: 22px; font-weight: 700; color: var(--ink); }
 .bench-similarity { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
@@ -205,15 +206,16 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 <script>
 // ====== SCORING FRAMEWORK (must match server) ======
 const VARIABLES = [
-  { key: 'stability',      name: 'Population Stability',   max: 20, hint: 'Homeownership %, residency length, married professionals' },
-  { key: 'psychographics', name: 'Psychographic Fit',      max: 15, hint: '25-45 age mix, structured professionals, identity fit' },
-  { key: 'walkability',    name: 'Walkability/Habit',      max: 12, hint: 'Walk Score, daily anchors, mixed-use density' },
-  { key: 'competition',    name: 'Competition Saturation', max: 10, hint: 'Higher = less saturated. F45/Barry\'s/OTF/Solidcore stacking penalizes' },
-  { key: 'density',        name: 'Population Density',     max: 10, hint: 'Sweet spot 8-25k per sq mi' },
-  { key: 'income',         name: 'Income Sweet Spot',      max: 10, hint: '$100-150k peak. Penalty for ultra-luxury or low income' },
-  { key: 'lifestyle',      name: 'Lifestyle Clustering',   max: 10, hint: 'Whole Foods, run clubs, wellness culture, athleisure' },
-  { key: 'housing',        name: 'Housing Mix',            max: 8,  hint: 'Townhomes/condos/owned > student/short-term renter' },
-  { key: 'hybrid',         name: 'Hybrid Work Patterns',   max: 5,  hint: 'WFH %, predictable schedules, daytime presence' }
+  { key: 'stability',      name: 'Population Stability',          max: 20, hint: 'Homeownership %, residency length, married professionals' },
+  { key: 'psychographics', name: 'Psychographic Fit',             max: 13, hint: '25-45 age mix, structured professionals, identity fit' },
+  { key: 'walkability',    name: 'Walkability/Habit',             max: 10, hint: 'Walk Score, daily anchors, mixed-use density' },
+  { key: 'competition',    name: 'Competition Saturation',        max: 9,  hint: 'Higher = less saturated. F45/Barry\'s/OTF/Solidcore stacking penalizes' },
+  { key: 'density',        name: 'Population Density',            max: 8,  hint: 'Sweet spot 8-25k per sq mi' },
+  { key: 'income',         name: 'Income Sweet Spot',             max: 10, hint: '$100-150k peak. Heavy penalty for ultra-luxury (>$200k) or low income' },
+  { key: 'lifestyle',      name: 'Lifestyle Clustering',          max: 8,  hint: 'Whole Foods, run clubs, wellness culture, athleisure' },
+  { key: 'housing',        name: 'Housing Mix',                   max: 6,  hint: 'Townhomes/condos/owned > student/short-term renter' },
+  { key: 'hybrid',         name: 'Hybrid Work Patterns',          max: 2,  hint: 'WFH %, predictable schedules, daytime presence' },
+  { key: 'trade_area',     name: 'Habit Corridor & Drive Access', max: 14, hint: 'Is location ON target customer daily path? Drive friction during class times? Pass-through traffic?' }
 ];
 
 let BENCHMARKS = [];
@@ -225,8 +227,8 @@ let currentResult = null;
 function tierFromScore(score) {
   if (score >= 85) return { label: 'Strong Fit',  cls: 'tier-strong',   verdict: 'Alexandria-tier. Move on it.' };
   if (score >= 75) return { label: 'Good Fit',    cls: 'tier-good',     verdict: '14th Street / Arlington tier. Likely succeeds with strong execution.' };
-  if (score >= 65) return { label: 'Marginal',    cls: 'tier-marginal', verdict: 'Dupont-tier. Depends heavily on GM and retention systems.' };
-  return                   { label: 'Risky',      cls: 'tier-risky',    verdict: 'Profile is below your weakest current location. Rethink.' };
+  if (score >= 60) return { label: 'Marginal',    cls: 'tier-marginal', verdict: 'Dupont-tier. Depends heavily on GM and retention systems.' };
+  return                   { label: 'Risky',      cls: 'tier-risky',    verdict: 'Johns Creek-tier or worse. Profile shows the failure pattern. Strongly reconsider.' };
 }
 
 function similarityToBenchmark(siteScores, benchScores) {
@@ -269,7 +271,8 @@ function renderLocationsList(locations) {
     locations.map(l => {
       const tierCls = l.performance_tier === 'top' ? 'bench-tier-top' :
                       l.performance_tier === 'mid' ? 'bench-tier-mid' :
-                      l.performance_tier === 'low' ? 'bench-tier-low' : 'bench-tier-unknown';
+                      l.performance_tier === 'low' ? 'bench-tier-low' :
+                      l.performance_tier === 'failed' ? 'bench-tier-failed' : 'bench-tier-unknown';
       const total = benchTotal(l);
       return `<div style="padding:10px;background:var(--bg);border-radius:6px;border:1px solid var(--line)">
         <div style="font-weight:600;font-size:13px;margin-bottom:4px">${l.studio_address || l.id}</div>
@@ -395,7 +398,8 @@ function renderBenchmarks(serverMatchHint) {
   document.getElementById('benchmark-grid').innerHTML = benchScored.map((b, i) => {
     const tierCls = b.performance_tier === 'top' ? 'bench-tier-top' :
                     b.performance_tier === 'mid' ? 'bench-tier-mid' :
-                    b.performance_tier === 'low' ? 'bench-tier-low' : 'bench-tier-unknown';
+                    b.performance_tier === 'low' ? 'bench-tier-low' :
+                    b.performance_tier === 'failed' ? 'bench-tier-failed' : 'bench-tier-unknown';
     return `<div class="bench-card ${i === 0 ? 'match' : ''}">
       <span class="bench-tier-tag ${tierCls}">${b.performance_tier || 'unrated'}</span>
       <p class="bench-name">${escapeHtml(b.studio_address || b.id)}</p>
