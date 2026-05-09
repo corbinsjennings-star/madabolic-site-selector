@@ -240,6 +240,13 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
 .history-list-scroll::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
 .history-list-scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
 .history-list-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+.collapsible-header { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; transition: color 0.15s; }
+.collapsible-header:hover { color: var(--ink); }
+.collapsible-header::after { content: ''; display: inline-block; width: 10px; height: 10px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); transition: transform 0.25s ease; margin-left: 8px; margin-top: -4px; }
+.collapsible-header.collapsed::after { transform: rotate(-45deg); margin-top: 0; margin-bottom: -4px; }
+.collapsible-content { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease; opacity: 1; }
+.collapsible-content > div { overflow: hidden; }
+.collapsible-content.collapsed { grid-template-rows: 0fr; opacity: 0; margin-top: -14px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) {
   .var-row { grid-template-columns: 130px 1fr 50px; }
@@ -354,8 +361,10 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
 </div>
 
 <div class="card">
-  <div class="section-title">Benchmark Locations on File</div>
-  <div id="locations-list"><p class="empty-state">Loading...</p></div>
+  <div class="section-title collapsible-header collapsed" id="locations-toggle">Benchmark Locations on File</div>
+  <div class="collapsible-content collapsed" id="locations-content">
+    <div id="locations-list"><p class="empty-state">Loading...</p></div>
+  </div>
 </div>
 
 </div>
@@ -883,6 +892,12 @@ function renderHistory() {
 
 runBtn.addEventListener('click', runEvaluation);
 addrInput.addEventListener('keydown', e => { if (e.key === 'Enter') runEvaluation(); });
+
+// Collapsible benchmark locations card
+document.getElementById('locations-toggle').addEventListener('click', () => {
+  document.getElementById('locations-toggle').classList.toggle('collapsed');
+  document.getElementById('locations-content').classList.toggle('collapsed');
+});
 
 // Boot
 loadBenchmarks();
