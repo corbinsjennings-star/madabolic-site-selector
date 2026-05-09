@@ -36,6 +36,11 @@ header { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var
 h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.5px; font-weight: 700; }
 .subtitle { color: var(--muted); font-size: 14px; margin: 0; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.mode-toggle { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.mode-btn { padding: 8px 16px; font-size: 13px; font-weight: 500; background: var(--surface); color: var(--muted); border: none; cursor: pointer; transition: all 0.15s; border-radius: 0; }
+.mode-btn:hover { background: var(--bg); color: var(--ink); }
+.mode-btn.active { background: var(--accent); color: white; }
+.mode-btn.active:hover { background: var(--accent-dark); }
 .input-row { display: flex; gap: 10px; align-items: stretch; }
 input[type="text"] { flex: 1; padding: 12px 14px; font-size: 15px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-family: inherit; }
 input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
@@ -97,6 +102,18 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 .bench-card.match .bench-similarity { color: var(--accent); font-weight: 600; }
 .match-callout { padding: 14px 18px; background: #fdf3f1; border-left: 3px solid var(--accent); border-radius: 4px; margin-bottom: 16px; font-size: 14px; line-height: 1.5; }
 .match-callout strong { color: var(--accent); }
+.recommendation-callout { padding: 16px 20px; background: var(--green-bg); border-left: 4px solid var(--green); border-radius: 6px; margin-bottom: 16px; }
+.recommendation-callout .rc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--green); font-weight: 700; margin-bottom: 4px; }
+.recommendation-callout .rc-address { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.recommendation-callout .rc-reasoning { font-size: 13px; color: var(--ink); line-height: 1.5; }
+.recommendation-callout .rc-meta { font-size: 12px; color: var(--muted); margin-top: 6px; font-style: italic; }
+.alternative-callout { padding: 16px 20px; background: #fdf3e3; border-left: 4px solid var(--gold); border-radius: 6px; margin: 12px 0; }
+.alternative-callout .ac-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700; margin-bottom: 4px; }
+.alternative-callout .ac-address { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.alternative-callout .ac-score { display: inline-block; background: var(--surface); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; color: var(--ink); margin-left: 8px; }
+.alternative-callout .ac-reasoning { font-size: 13px; color: var(--ink); line-height: 1.5; }
+.alternative-callout .ac-rescore { margin-top: 10px; font-size: 12px; padding: 6px 12px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+.alternative-callout .ac-rescore:hover { background: var(--accent-dark); }
 .verdict { padding: 16px 18px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
 .history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
 .history-row:hover { background: #efeae3; }
@@ -140,16 +157,31 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 </header>
 
 <div class="card">
-  <label for="addr" class="section-title">Prospective Address</label>
+  <div class="mode-toggle" id="mode-toggle">
+    <button class="mode-btn active" data-mode="address">Score Specific Address</button>
+    <button class="mode-btn" data-mode="city">Find Best Spot in a City</button>
+  </div>
+  <label for="addr" class="section-title" id="input-label">Prospective Address</label>
   <div class="input-row">
     <input id="addr" type="text" placeholder="e.g. 1234 King Street, Charleston SC" />
     <button id="run-btn">Score</button>
   </div>
   <div class="status" id="status"></div>
   <div id="error-box"></div>
+  <p style="font-size:12px;color:var(--muted);margin:10px 0 0" id="mode-hint">Enter an exact address to score it. If it scores under 70, the tool will also suggest a better corridor within 15 miles.</p>
 </div>
 
 <div class="results" id="results">
+  <div id="recommendation-card" style="display:none">
+    <div class="card">
+      <div class="recommendation-callout">
+        <div class="rc-label">AI Recommended Corridor</div>
+        <div class="rc-address" id="rc-address">—</div>
+        <div class="rc-reasoning" id="rc-reasoning">—</div>
+        <div class="rc-meta" id="rc-alternatives">—</div>
+      </div>
+    </div>
+  </div>
   <div class="card">
     <div class="score-hero">
       <div class="score-circle" id="score-circle">
@@ -172,6 +204,12 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
   <div class="card">
     <div class="section-title">Verdict</div>
     <div class="verdict" id="verdict">—</div>
+    <div class="alternative-callout" id="alternative-callout" style="display:none">
+      <div class="ac-label">Better Nearby Alternative</div>
+      <div class="ac-address" id="ac-address">—<span class="ac-score" id="ac-score">—</span></div>
+      <div class="ac-reasoning" id="ac-reasoning">—</div>
+      <button class="ac-rescore" id="ac-rescore-btn">Score this alternative</button>
+    </div>
   </div>
 
   <div class="card">
@@ -329,42 +367,80 @@ function setError(msg) {
   errorBox.innerHTML = msg ? `<div class="error">${msg}</div>` : '';
 }
 
+let currentMode = 'address'; // 'address' or 'city'
+
 async function runEvaluation() {
-  const addr = addrInput.value.trim();
-  if (!addr) { setError('Enter an address first.'); return; }
+  const input = addrInput.value.trim();
+  if (!input) {
+    setError(currentMode === 'city' ? 'Enter a city first.' : 'Enter an address first.');
+    return;
+  }
   setError('');
   resultsEl.classList.remove('show');
   runBtn.disabled = true;
-  runBtn.textContent = 'Researching...';
-  setStatus('Researching demographics, walkability, competition, and lifestyle data...', true);
+  runBtn.textContent = currentMode === 'city' ? 'Searching...' : 'Researching...';
+  setStatus(
+    currentMode === 'city'
+      ? `Searching ${input} for the best MADabolic corridor and scoring it...`
+      : 'Researching demographics, walkability, competition, and lifestyle data...',
+    true
+  );
 
   try {
-    const res = await fetch('/api/score', {
+    const endpoint = currentMode === 'city' ? '/api/find-best-in-city' : '/api/score';
+    const body = currentMode === 'city' ? { city: input } : { address: input };
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: addr })
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `Server returned ${res.status}`);
     }
     const result = await res.json();
+
+    // For city search, the AI returns a recommended_address — use that as the display address
+    const displayAddress = (currentMode === 'city' && result.recommended_address)
+      ? result.recommended_address
+      : input;
+
     currentResult = result;
     currentScores = result.scores;
     currentEvidence = result.evidence || {};
-    currentAddress = addr;
-    renderResults(addr, result);
-    saveToHistory(addr, result);
+    currentAddress = displayAddress;
+    renderResults(displayAddress, result);
+    saveToHistory(displayAddress, result);
     setStatus('');
   } catch (e) {
     console.error(e);
-    setError('Scoring failed: ' + e.message);
+    setError((currentMode === 'city' ? 'City search failed: ' : 'Scoring failed: ') + e.message);
     setStatus('');
   } finally {
     runBtn.disabled = false;
-    runBtn.textContent = 'Score';
+    runBtn.textContent = currentMode === 'city' ? 'Find Best Spot' : 'Score';
   }
 }
+
+// Mode toggle
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    if (currentMode === 'city') {
+      addrInput.placeholder = 'e.g. Charlotte NC or Houston Texas';
+      document.getElementById('input-label').textContent = 'City to Search';
+      document.getElementById('mode-hint').textContent = 'Enter a city. The tool finds the best corridor in that city for a MADabolic and scores it.';
+      runBtn.textContent = 'Find Best Spot';
+    } else {
+      addrInput.placeholder = 'e.g. 1234 King Street, Charleston SC';
+      document.getElementById('input-label').textContent = 'Prospective Address';
+      document.getElementById('mode-hint').textContent = 'Enter an exact address to score it. If it scores under 70, the tool will also suggest a better corridor within 15 miles.';
+      runBtn.textContent = 'Score';
+    }
+  });
+});
 
 function renderResults(address, result) {
   const total = result.total;
@@ -384,6 +460,41 @@ function renderResults(address, result) {
   const circle = document.getElementById('score-circle');
   const colors = { 'tier-strong': 'var(--green)', 'tier-good': 'var(--gold)', 'tier-marginal': 'var(--amber)', 'tier-risky': 'var(--red)' };
   circle.style.borderColor = colors[tier.cls];
+
+  // City-search recommendation callout (top of results)
+  const recCard = document.getElementById('recommendation-card');
+  if (result.recommended_address && result.recommendation_reasoning) {
+    document.getElementById('rc-address').textContent = result.recommended_address;
+    document.getElementById('rc-reasoning').textContent = result.recommendation_reasoning;
+    const alts = (result.alternative_corridors_considered || []).filter(Boolean);
+    document.getElementById('rc-alternatives').textContent = alts.length
+      ? `Other corridors considered: ${alts.join(' · ')}`
+      : '';
+    recCard.style.display = 'block';
+  } else {
+    recCard.style.display = 'none';
+  }
+
+  // Nearby alternative callout (when score < 70)
+  const altCallout = document.getElementById('alternative-callout');
+  if (result.nearby_alternative && result.nearby_alternative.address) {
+    const alt = result.nearby_alternative;
+    document.getElementById('ac-address').firstChild.nodeValue = alt.address + ' ';
+    document.getElementById('ac-score').textContent = alt.estimated_score ? `est. ${alt.estimated_score}/100` : '';
+    document.getElementById('ac-reasoning').textContent = alt.reasoning || '';
+    altCallout.style.display = 'block';
+    // Set up rescore button
+    const rescoreBtn = document.getElementById('ac-rescore-btn');
+    rescoreBtn.onclick = () => {
+      addrInput.value = alt.address;
+      // Switch to address mode if currently in city mode
+      const addressBtn = document.querySelector('.mode-btn[data-mode="address"]');
+      if (!addressBtn.classList.contains('active')) addressBtn.click();
+      runEvaluation();
+    };
+  } else {
+    altCallout.style.display = 'none';
+  }
 
   // Verdict
   document.getElementById('verdict').textContent = result.verdict + (result.confidence ? `\n\nConfidence: ${result.confidence}` : '');

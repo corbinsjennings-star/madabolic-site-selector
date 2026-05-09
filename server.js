@@ -258,6 +258,7 @@ YOUR TASK:
 3. Identify which existing MADabolic benchmark location it most resembles in profile (including FAILED Johns Creek and St Pete if profiles match).
 4. List 4-6 specific, concrete PROS (real reasons it could succeed at this address — cite actual data found).
 5. List 3-5 specific, concrete CONS or risks (real concerns based on what you found, especially trade area / habit corridor / momentum / strip-mall mismatches).
+6. NEARBY ALTERNATIVE: If your final total score is BELOW 70, identify a better-fit corridor within 15 miles of "${address}" that would score higher (target: 70+). Use the same success/failure patterns. Specify neighborhood + specific street + cross-streets. Estimate roughly what that alternative would score. If your total score is 70+, set nearby_alternative to null.
 
 Return ONLY valid JSON, no markdown, no other text:
 {
@@ -291,9 +292,17 @@ Return ONLY valid JSON, no markdown, no other text:
   "similarity_explanation": "1-2 sentences on why this profile matches that existing location",
   "pros": ["specific pro with data", "...", ...],
   "cons": ["specific con or risk", "...", ...],
+  "nearby_alternative": null,
   "verdict": "3-4 sentence direct operator-level take. No fluff.",
   "confidence": "high" | "medium" | "low"
-}`;
+}
+
+If total score < 70, replace "nearby_alternative": null with:
+  "nearby_alternative": {
+    "address": "<better corridor within 15 miles, e.g. 'Park Slope Brooklyn — 7th Ave between Union and 9th St'>",
+    "estimated_score": <number 70-85>,
+    "reasoning": "2-3 sentence explanation of why this is a better fit and how it differs from the original address"
+  }`;
 }
 
 async function scoreAddressWithLLM(address) {
@@ -334,6 +343,114 @@ async function scoreAddressWithLLM(address) {
     total,
     tier: tierFromScore(total)
   };
+}
+
+function buildCitySearchPrompt(city, benchmarks) {
+  const benchSummary = benchmarks.map(b => {
+    const total = b.demographic_scores ? VARIABLES.reduce((s,v) => s + (b.demographic_scores[v.key] || 0), 0) : 0;
+    const tierLabel = b.performance_tier === 'top' ? 'TOP PERFORMER' :
+                      b.performance_tier === 'mid' ? 'MID-TIER' :
+                      b.performance_tier === 'low' ? 'UNDERPERFORMS' :
+                      b.performance_tier === 'failed' ? 'FAILED — CLOSED' : 'UNRATED';
+    return `- ${b.studio_address}: ${total}/100. ${tierLabel}. ${b.notes || ''}`;
+  }).join('\n');
+
+  return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. The user has asked: "where in ${city} would be the best place to put a MADabolic?"
+
+Your task is TWO STEPS combined into one response:
+STEP 1: Use web search to identify the SINGLE BEST SPECIFIC CORRIDOR in ${city} for a MADabolic location based on the success and failure patterns documented below.
+STEP 2: Score that recommended corridor using the 11-variable framework.
+
+MADabolic SUCCESS PATTERNS (from real franchise data):
+- Affluent stable urban village with rooted demo (Alexandria VA, Cincinnati Woodburn, 14th St DC) — 300+ members
+- Emerging growth corridor early entry (Austin St Elmo, Asheville South Slope) — 300+ members at maturity
+- Hyper-walkable neighborhood with strong wellness culture compensates for income/housing weakness (Asheville)
+- Small market with limited alternatives + strong owner-operator (Charlottesville, Scotts Valley, Jupiter) — 200-280 members
+- True urban village absorbs local competition (Cincinnati works despite Fitness Clarified 3 doors away)
+
+MADabolic FAILURE PATTERNS (kill criteria to AVOID):
+- Stroad strip mall layout (suburban arterial with strip-center retail, big parking lots, residential separated from retail) — kills retention even with great Walk Score on paper
+- Suburban sprawl + ultra-luxury fragmentation (Johns Creek pattern: $180k+ median, country clubs, Equinox, Lifetime competing for fitness spend)
+- Major metro shadow / commuter fragmentation (Stamford pattern: cities within 1-hour rail of NYC/LA/Chicago/SF/DC/Boston where premium fitness demand bleeds to the bigger metro)
+- Entertainment district trap (RiNo Denver, Tampa Ybor, H Street DC: high Walk Score and density but nightlife/brewery-dominant cultural use → trial without retention)
+- Below-sweet-spot income + stroad combo (St Pete failure: $57-70k median + industrial corridor = closure)
+
+EXISTING MADabolic LOCATIONS (do NOT recommend a corridor in these metros — cannibalization risk):
+- Washington DC metro (Alexandria, Arlington, Dupont, H Street, 14th Street)
+- Atlanta (Old Fourth Ward / Sweet Auburn)
+- Austin TX (St Elmo)
+- Asheville NC (South Slope)
+- Bend OR (Old Bend Downtown)
+- Cincinnati OH (Woodburn / East Walnut Hills)
+- Charlottesville VA (Preston Ave)
+- Denver CO (RiNo, Westminster)
+- Jupiter FL (Indiantown Rd)
+- Scotts Valley CA (Mt Hermon Rd)
+- Stamford CT (Harbor Point)
+- Tampa FL (Ybor City)
+
+REFERENCE BENCHMARKS:
+${benchSummary}
+
+YOUR JOB:
+1. Web-search ${city} for: best neighborhoods for affluent young/mid-career professionals 25-45, walkable urban villages, mixed-use corridors, recent boutique fitness openings, recent mixed-use developments, neighborhoods with $100-150k median household income.
+2. Identify 2-3 candidate corridors. Then PICK THE ONE with the best fit based on success/failure patterns.
+3. Specify the recommended corridor with: neighborhood name + specific street(s) + cross-streets where relevant. Example: "South End Charlotte — East Boulevard between Park Road and Tremont Avenue" or "Heights Houston — 19th Street between Yale and Heights Boulevard."
+4. Score that corridor using the 11-variable framework.
+5. Provide pros/cons specific to that corridor.
+
+If the city has no good fit (too small, too saturated, all candidates fit failure patterns), say so honestly in the verdict and give the best of bad options with low scores and warnings.
+
+If MADabolic already operates in this metro (see list above), recommend a DIFFERENT corridor in the same metro that wouldn't cannibalize the existing location, and flag the cannibalization concern in the verdict.
+
+Return ONLY valid JSON, no markdown:
+{
+  "recommended_address": "<neighborhood + specific street + cross-streets>",
+  "recommendation_reasoning": "2-3 sentences on why this corridor over other candidates in the city",
+  "alternative_corridors_considered": ["<corridor 1>", "<corridor 2>"],
+  "scores": {
+    "stability": <0-18>, "psychographics": <0-12>, "walkability": <0-10>, "competition": <0-9>,
+    "density": <0-7>, "income": <0-10>, "lifestyle": <0-8>, "housing": <0-6>,
+    "hybrid": <0-1>, "trade_area": <0-13>, "market_momentum": <0-6>
+  },
+  "evidence": {
+    "stability": "...", "psychographics": "...", "walkability": "...", "competition": "...",
+    "density": "...", "income": "...", "lifestyle": "...", "housing": "...",
+    "hybrid": "...", "trade_area": "...", "market_momentum": "..."
+  },
+  "most_similar_location": "<exact studio_address from benchmarks above>",
+  "similarity_explanation": "1-2 sentences",
+  "pros": ["...", "...", ...],
+  "cons": ["...", "...", ...],
+  "verdict": "3-4 sentence operator-level take. No fluff.",
+  "confidence": "high" | "medium" | "low"
+}`;
+}
+
+async function findBestInCityWithLLM(city) {
+  if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured.');
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+  const benchmarks = (loadStore().locations || []).filter(l => l.demographic_scores);
+  const prompt = buildCitySearchPrompt(city, benchmarks);
+
+  const response = await client.messages.create({
+    model: SCORING_MODEL,
+    max_tokens: 5000,
+    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
+    messages: [{ role: 'user', content: prompt }]
+  });
+
+  const textBlocks = (response.content || []).filter(b => b.type === 'text').map(b => b.text);
+  const fullText = textBlocks.join('\n').trim();
+  let jsonStr = fullText;
+  const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1];
+  const objMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (!objMatch) throw new Error('No JSON found in city-search response: ' + fullText.slice(0, 300));
+  const parsed = JSON.parse(objMatch[0]);
+
+  const total = totalScore(parsed.scores);
+  return { ...parsed, total, tier: tierFromScore(total) };
 }
 
 // ============ ROUTES ============
@@ -390,6 +507,25 @@ app.post('/api/score', async (req, res) => {
   } catch (e) {
     console.error('[score] Error:', e);
     res.status(500).json({ error: e.message || 'Scoring failed' });
+  }
+});
+
+// Find best corridor in a city
+app.post('/api/find-best-in-city', async (req, res) => {
+  const { city } = req.body || {};
+  if (!city || typeof city !== 'string' || city.trim().length < 2) {
+    return res.status(400).json({ error: 'city required (string)' });
+  }
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'Scoring is not configured. Set ANTHROPIC_API_KEY.' });
+  }
+  try {
+    console.log('[find-best] Searching:', city);
+    const result = await findBestInCityWithLLM(city.trim());
+    res.json(result);
+  } catch (e) {
+    console.error('[find-best] Error:', e);
+    res.status(500).json({ error: e.message || 'City search failed' });
   }
 });
 
