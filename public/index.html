@@ -247,6 +247,24 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
 .collapsible-content { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease; opacity: 1; }
 .collapsible-content > div { overflow: hidden; }
 .collapsible-content.collapsed { grid-template-rows: 0fr; opacity: 0; margin-top: -14px; }
+.top-corridors { display: flex; flex-direction: column; gap: 10px; }
+.tc-row { display: grid; grid-template-columns: 36px 1fr auto auto; gap: 14px; align-items: center; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; transition: border-color 0.15s, transform 0.15s; }
+.tc-row:hover { border-color: var(--accent); }
+.tc-row.tc-rank-1 { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-glow), var(--surface-2)); }
+.tc-rank { font-family: 'Eurostile', system-ui, sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; text-align: center; }
+.tc-rank-1 .tc-rank { font-size: 32px; }
+.tc-body { min-width: 0; }
+.tc-address { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; line-height: 1.3; }
+.tc-reasoning { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.tc-score { font-size: 22px; font-weight: 800; font-family: 'Eurostile', system-ui, sans-serif; color: var(--ink); text-align: right; min-width: 50px; }
+.tc-row.tc-rank-1 .tc-score { color: var(--accent); }
+.tc-action { padding: 6px 10px; font-size: 10px; font-weight: 700; background: transparent; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.8px; transition: all 0.15s; font-family: inherit; }
+.tc-action:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+.tc-current { padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; text-transform: uppercase; letter-spacing: 0.8px; background: var(--accent-glow); }
+@media (max-width: 700px) {
+  .tc-row { grid-template-columns: 28px 1fr auto; }
+  .tc-action, .tc-current { grid-column: 2 / 4; justify-self: end; margin-top: 4px; }
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) {
   .var-row { grid-template-columns: 130px 1fr 50px; }
@@ -291,6 +309,13 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
         <div class="rc-reasoning" id="rc-reasoning">—</div>
         <div class="rc-meta" id="rc-alternatives">—</div>
       </div>
+    </div>
+  </div>
+  <div id="top-corridors-card" style="display:none">
+    <div class="card">
+      <div class="section-title">Top 5 Corridors in This Area</div>
+      <div class="top-corridors" id="top-corridors-list"></div>
+      <p style="font-size:11px;color:var(--muted);margin:12px 0 0;font-style:italic">#1 is fully scored below. Click "Score This" on any other corridor to deep-dive on it.</p>
     </div>
   </div>
   <div class="card">
@@ -619,11 +644,46 @@ function renderResults(address, result) {
     document.getElementById('rc-reasoning').textContent = result.recommendation_reasoning;
     const alts = (result.alternative_corridors_considered || []).filter(Boolean);
     document.getElementById('rc-alternatives').textContent = alts.length
-      ? `Other corridors considered: ${alts.join(' · ')}`
+      ? `Also considered: ${alts.join(' · ')}`
       : '';
     recCard.style.display = 'block';
   } else {
     recCard.style.display = 'none';
+  }
+
+  // Top 5 corridors list (only shown for area-search results)
+  const topCard = document.getElementById('top-corridors-card');
+  const topList = result.top_corridors;
+  if (Array.isArray(topList) && topList.length > 1) {
+    topCard.style.display = 'block';
+    document.getElementById('top-corridors-list').innerHTML = topList.map(c => {
+      const rank = c.rank || '?';
+      const score = c.estimated_score != null ? c.estimated_score : '—';
+      const isCurrent = rank === 1;
+      const safeAddr = String(c.address || '').replace(/"/g, '&quot;');
+      const actionHtml = isCurrent
+        ? `<span class="tc-current">Scored Below</span>`
+        : `<button class="tc-action" data-corridor="${safeAddr}">Score This</button>`;
+      return `<div class="tc-row tc-rank-${rank}">
+        <div class="tc-rank">${rank}</div>
+        <div class="tc-body">
+          <div class="tc-address">${escapeHtml(c.address || '')}</div>
+          <div class="tc-reasoning">${escapeHtml(c.reasoning || '')}</div>
+        </div>
+        <div class="tc-score">${score}</div>
+        ${actionHtml}
+      </div>`;
+    }).join('');
+    document.querySelectorAll('#top-corridors-list .tc-action').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addrInput.value = btn.dataset.corridor;
+        const addressBtn = document.querySelector('.mode-btn[data-mode="address"]');
+        if (!addressBtn.classList.contains('active')) addressBtn.click();
+        runEvaluation();
+      });
+    });
+  } else {
+    topCard.style.display = 'none';
   }
 
   // Nearby alternative callout (when score < 70)

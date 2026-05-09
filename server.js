@@ -438,11 +438,12 @@ ${benchSummary}
 
 YOUR JOB:
 1. Web-search ${area} for: best sub-areas/cities (if broad), best neighborhoods for affluent young/mid-career professionals 25-45, walkable urban villages, mixed-use corridors, recent boutique fitness openings, recent mixed-use developments, neighborhoods with $100-150k median household income.
-2. If the input is a broad region/state, narrow to the best metro/sub-area first, then identify candidate corridors within it. If the input is already a specific city, identify candidate corridors within it.
-3. Identify 2-3 candidate corridors total. Then PICK THE ONE with the best fit based on success/failure patterns.
-4. Specify the recommended corridor with: city name + neighborhood name + specific street(s) + cross-streets where relevant. Example: "Falls Church VA — Broad Street between Annandale Road and Park Avenue" or "South End Charlotte — East Boulevard between Park Road and Tremont Avenue."
-5. Score that corridor using the 11-variable framework.
-6. Provide pros/cons specific to that corridor.
+2. If the input is a broad region/state, narrow to the best metros/sub-areas first, then identify the best corridors across those sub-areas. If the input is already a specific city, identify candidate corridors within it.
+3. Identify the TOP 5 candidate corridors total, ranked from best (#1) to fifth-best (#5). Cast a wide net — across sub-cities or across neighborhoods within one city. Each corridor must be specific (city + neighborhood + street + cross-streets).
+4. The #1 ranked corridor gets the full 11-variable scoring with detailed pros/cons.
+5. Each of the 5 corridors (including #1) gets an estimated score (0-100) and 1-2 sentence reasoning explaining why it ranks where it does.
+6. Score the #1 corridor using the full 11-variable framework.
+7. Provide pros/cons specific to the #1 corridor.
 
 If the area has no good fit (too small, too saturated, all candidates fit failure patterns), say so honestly in the verdict and give the best of bad options with low scores and warnings.
 
@@ -450,9 +451,16 @@ DO NOT use existing nearby MAD locations as a penalty or kill criterion. MAD cor
 
 Return ONLY valid JSON, no markdown:
 {
-  "recommended_address": "<neighborhood + specific street + cross-streets>",
-  "recommendation_reasoning": "2-3 sentences on why this corridor over other candidates in the city",
-  "alternative_corridors_considered": ["<corridor 1>", "<corridor 2>"],
+  "recommended_address": "<the #1 ranked corridor — city + neighborhood + street + cross-streets>",
+  "recommendation_reasoning": "2-3 sentences on why this corridor is #1 over the others",
+  "top_corridors": [
+    {"rank": 1, "address": "<same as recommended_address>", "estimated_score": <number 0-100>, "reasoning": "1-2 sentence why this is #1"},
+    {"rank": 2, "address": "<corridor 2 city + neighborhood + street>", "estimated_score": <number 0-100>, "reasoning": "1-2 sentence why this is #2"},
+    {"rank": 3, "address": "<corridor 3 ...>", "estimated_score": <number 0-100>, "reasoning": "..."},
+    {"rank": 4, "address": "<corridor 4 ...>", "estimated_score": <number 0-100>, "reasoning": "..."},
+    {"rank": 5, "address": "<corridor 5 ...>", "estimated_score": <number 0-100>, "reasoning": "..."}
+  ],
+  "alternative_corridors_considered": ["<short list of any other corridors briefly considered but didn't make top 5>"],
   "scores": {
     "stability": <0-18>, "psychographics": <0-12>, "walkability": <0-10>, "competition": <0-9>,
     "density": <0-7>, "income": <0-10>, "lifestyle": <0-8>, "housing": <0-6>,
