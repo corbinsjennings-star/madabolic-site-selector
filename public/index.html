@@ -159,7 +159,7 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 <div class="card">
   <div class="mode-toggle" id="mode-toggle">
     <button class="mode-btn active" data-mode="address">Score Specific Address</button>
-    <button class="mode-btn" data-mode="city">Find Best Spot in a City</button>
+    <button class="mode-btn" data-mode="city">Find Best Spot in a City or Region</button>
   </div>
   <label for="addr" class="section-title" id="input-label">Prospective Address</label>
   <div class="input-row">
@@ -429,9 +429,9 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.classList.add('active');
     currentMode = btn.dataset.mode;
     if (currentMode === 'city') {
-      addrInput.placeholder = 'e.g. Charlotte NC or Houston Texas';
-      document.getElementById('input-label').textContent = 'City to Search';
-      document.getElementById('mode-hint').textContent = 'Enter a city. The tool finds the best corridor in that city for a MADabolic and scores it.';
+      addrInput.placeholder = 'e.g. Northern Virginia, Charlotte NC, Bay Area, Tampa Bay, Triangle NC, Tennessee';
+      document.getElementById('input-label').textContent = 'City, Metro, or Region to Search';
+      document.getElementById('mode-hint').textContent = 'Enter a city ("Charlotte NC"), metro region ("Northern Virginia", "Bay Area", "Tampa Bay"), or even a state. The tool will narrow to the best sub-area, find the best corridor, and score it.';
       runBtn.textContent = 'Find Best Spot';
     } else {
       addrInput.placeholder = 'e.g. 1234 King Street, Charleston SC';

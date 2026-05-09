@@ -345,7 +345,7 @@ async function scoreAddressWithLLM(address) {
   };
 }
 
-function buildCitySearchPrompt(city, benchmarks) {
+function buildCitySearchPrompt(area, benchmarks) {
   const benchSummary = benchmarks.map(b => {
     const total = b.demographic_scores ? VARIABLES.reduce((s,v) => s + (b.demographic_scores[v.key] || 0), 0) : 0;
     const tierLabel = b.performance_tier === 'top' ? 'TOP PERFORMER' :
@@ -355,10 +355,22 @@ function buildCitySearchPrompt(city, benchmarks) {
     return `- ${b.studio_address}: ${total}/100. ${tierLabel}. ${b.notes || ''}`;
   }).join('\n');
 
-  return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. The user has asked: "where in ${city} would be the best place to put a MADabolic?"
+  return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. The user has asked: "where in ${area} would be the best place to put a MADabolic?"
+
+The input "${area}" may be ANY of the following, and you must adapt:
+- A specific city (e.g. "Charlotte NC", "Houston TX") — search corridors within that city
+- A metro region or geographic area (e.g. "Northern Virginia", "Bay Area", "Tampa Bay area", "DFW", "Inland Empire", "Triangle NC", "Front Range", "Twin Cities") — identify the candidate cities/towns/sub-areas within the region, then drill down to the best corridor in the best sub-area
+- A state or large region (e.g. "Tennessee", "Florida", "Pacific Northwest") — narrow to the best metro within the area, then to the best corridor
+- A neighborhood-scale input (e.g. "South End Charlotte") — score that area directly
+
+For broader areas, your job is to NARROW IT DOWN. Examples:
+- "Northern Virginia" → consider Arlington, Alexandria, Falls Church, Vienna, McLean, Reston, Tysons, Old Town Manassas, Fairfax. Pick the best sub-city, then the best corridor in that sub-city. (Note: Arlington and Alexandria already have MAD locations — flag cannibalization, recommend a different sub-area like Falls Church or Vienna.)
+- "Bay Area" → consider Berkeley, Oakland, Walnut Creek, San Mateo, Palo Alto, Mill Valley, etc. Pick best sub-area, then corridor.
+- "Triangle NC" → consider Raleigh, Durham, Chapel Hill, Cary. Pick best sub-area, then corridor.
+- "Florida" → narrow to a metro (Tampa, Orlando, Jacksonville, etc.) then to a corridor. Avoid Jupiter (already exists).
 
 Your task is TWO STEPS combined into one response:
-STEP 1: Use web search to identify the SINGLE BEST SPECIFIC CORRIDOR in ${city} for a MADabolic location based on the success and failure patterns documented below.
+STEP 1: Use web search to identify the SINGLE BEST SPECIFIC CORRIDOR within ${area} for a MADabolic location based on the success and failure patterns documented below. If the input is broad, do the narrowing inside this step.
 STEP 2: Score that recommended corridor using the 11-variable framework.
 
 MADabolic SUCCESS PATTERNS (from real franchise data):
@@ -393,15 +405,16 @@ REFERENCE BENCHMARKS:
 ${benchSummary}
 
 YOUR JOB:
-1. Web-search ${city} for: best neighborhoods for affluent young/mid-career professionals 25-45, walkable urban villages, mixed-use corridors, recent boutique fitness openings, recent mixed-use developments, neighborhoods with $100-150k median household income.
-2. Identify 2-3 candidate corridors. Then PICK THE ONE with the best fit based on success/failure patterns.
-3. Specify the recommended corridor with: neighborhood name + specific street(s) + cross-streets where relevant. Example: "South End Charlotte — East Boulevard between Park Road and Tremont Avenue" or "Heights Houston — 19th Street between Yale and Heights Boulevard."
-4. Score that corridor using the 11-variable framework.
-5. Provide pros/cons specific to that corridor.
+1. Web-search ${area} for: best sub-areas/cities (if broad), best neighborhoods for affluent young/mid-career professionals 25-45, walkable urban villages, mixed-use corridors, recent boutique fitness openings, recent mixed-use developments, neighborhoods with $100-150k median household income.
+2. If the input is a broad region/state, narrow to the best metro/sub-area first, then identify candidate corridors within it. If the input is already a specific city, identify candidate corridors within it.
+3. Identify 2-3 candidate corridors total. Then PICK THE ONE with the best fit based on success/failure patterns.
+4. Specify the recommended corridor with: city name + neighborhood name + specific street(s) + cross-streets where relevant. Example: "Falls Church VA — Broad Street between Annandale Road and Park Avenue" or "South End Charlotte — East Boulevard between Park Road and Tremont Avenue."
+5. Score that corridor using the 11-variable framework.
+6. Provide pros/cons specific to that corridor.
 
-If the city has no good fit (too small, too saturated, all candidates fit failure patterns), say so honestly in the verdict and give the best of bad options with low scores and warnings.
+If the area has no good fit (too small, too saturated, all candidates fit failure patterns), say so honestly in the verdict and give the best of bad options with low scores and warnings.
 
-If MADabolic already operates in this metro (see list above), recommend a DIFFERENT corridor in the same metro that wouldn't cannibalize the existing location, and flag the cannibalization concern in the verdict.
+If MADabolic already operates in the recommended sub-area (see existing locations list above), pivot to a DIFFERENT sub-area within the requested geography that wouldn't cannibalize the existing location. Flag the cannibalization concern in the verdict. Example: input "Northern Virginia" → existing locations are Arlington and Alexandria → recommend Falls Church or Vienna or Reston instead.
 
 Return ONLY valid JSON, no markdown:
 {
@@ -427,11 +440,11 @@ Return ONLY valid JSON, no markdown:
 }`;
 }
 
-async function findBestInCityWithLLM(city) {
+async function findBestInCityWithLLM(area) {
   if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured.');
   const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   const benchmarks = (loadStore().locations || []).filter(l => l.demographic_scores);
-  const prompt = buildCitySearchPrompt(city, benchmarks);
+  const prompt = buildCitySearchPrompt(area, benchmarks);
 
   const response = await client.messages.create({
     model: SCORING_MODEL,
@@ -510,22 +523,23 @@ app.post('/api/score', async (req, res) => {
   }
 });
 
-// Find best corridor in a city
+// Find best corridor in a city, region, metro area, or state
 app.post('/api/find-best-in-city', async (req, res) => {
-  const { city } = req.body || {};
-  if (!city || typeof city !== 'string' || city.trim().length < 2) {
-    return res.status(400).json({ error: 'city required (string)' });
+  const body = req.body || {};
+  const area = (body.area || body.city || '').trim();
+  if (!area || area.length < 2) {
+    return res.status(400).json({ error: 'area or city required (string)' });
   }
   if (!ANTHROPIC_API_KEY) {
     return res.status(503).json({ error: 'Scoring is not configured. Set ANTHROPIC_API_KEY.' });
   }
   try {
-    console.log('[find-best] Searching:', city);
-    const result = await findBestInCityWithLLM(city.trim());
+    console.log('[find-best] Searching:', area);
+    const result = await findBestInCityWithLLM(area);
     res.json(result);
   } catch (e) {
     console.error('[find-best] Error:', e);
-    res.status(500).json({ error: e.message || 'City search failed' });
+    res.status(500).json({ error: e.message || 'Area search failed' });
   }
 });
 
