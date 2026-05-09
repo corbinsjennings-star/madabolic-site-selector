@@ -375,6 +375,35 @@ function setError(msg) {
   errorBox.innerHTML = msg ? `<div class="error">${msg}</div>` : '';
 }
 
+function clearClarification() {
+  document.getElementById('clarification-box').innerHTML = '';
+}
+
+function renderClarification(result) {
+  const box = document.getElementById('clarification-box');
+  const opts = (result.clarification_options || []).map((opt, i) => {
+    const safeValue = String(opt.value || '').replace(/"/g, '&quot;');
+    const safeLabel = escapeHtml(opt.label || opt.value || '');
+    return `<button class="cc-option" data-value="${safeValue}">
+      <div class="cc-option-label">${safeLabel}</div>
+      <div class="cc-option-value">${escapeHtml(opt.value || '')}</div>
+    </button>`;
+  }).join('');
+  box.innerHTML = `<div class="clarification-card">
+    <div class="cc-prompt">${escapeHtml(result.clarification_prompt || 'Which one did you mean?')}</div>
+    <div class="cc-options">${opts}</div>
+  </div>`;
+  box.querySelectorAll('.cc-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      addrInput.value = btn.dataset.value;
+      clearClarification();
+      runEvaluation();
+    });
+  });
+  // Hide the previous results panel
+  resultsEl.classList.remove('show');
+}
+
 let currentMode = 'address'; // 'address' or 'city'
 
 async function runEvaluation() {
@@ -384,6 +413,7 @@ async function runEvaluation() {
     return;
   }
   setError('');
+  clearClarification();
   resultsEl.classList.remove('show');
   runBtn.disabled = true;
   runBtn.textContent = currentMode === 'city' ? 'Searching...' : 'Researching...';
