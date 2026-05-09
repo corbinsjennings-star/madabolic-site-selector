@@ -60,6 +60,10 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 .score-summary { flex: 1; }
 .score-summary h2 { margin: 0 0 6px; font-size: 18px; word-break: break-word; }
 .score-summary p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.member-estimate { margin: 12px 0 4px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.member-estimate-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+.member-estimate-value { font-size: 22px; font-weight: 700; color: var(--ink); margin-top: 2px; line-height: 1.2; }
+.member-estimate-note { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; }
 .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; margin: 0 0 12px; }
 .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .pros-cons > div { background: var(--bg); border-radius: 8px; padding: 16px; border: 1px solid var(--line); }
@@ -155,6 +159,11 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
       <div class="score-summary">
         <span class="tier-badge" id="tier-badge">—</span>
         <h2 id="addr-display">—</h2>
+        <div class="member-estimate" id="member-estimate-box">
+          <div class="member-estimate-label">Estimated Members at Maturity</div>
+          <div class="member-estimate-value" id="member-estimate-value">—</div>
+          <div class="member-estimate-note">12-24 months in. Wide variability based on owner-operator execution.</div>
+        </div>
         <p id="quick-take">—</p>
       </div>
     </div>
@@ -229,6 +238,22 @@ let currentScores = null;
 let currentEvidence = {};
 let currentAddress = null;
 let currentResult = null;
+
+// Member-count estimate calibrated against the 18-location benchmark dataset.
+// Each band reflects the actual member range observed at similar scores,
+// with a 30-50 member spread to capture execution variability.
+function memberRangeFromScore(score) {
+  if (score >= 85) return { low: 320, high: 380, label: 'Alexandria-tier' };
+  if (score >= 80) return { low: 290, high: 350, label: '14th St / Cincinnati tier' };
+  if (score >= 75) return { low: 270, high: 320, label: 'Arlington / Austin St Elmo tier' };
+  if (score >= 70) return { low: 240, high: 300, label: 'Bend / Dupont tier' };
+  if (score >= 65) return { low: 210, high: 270, label: 'Asheville / H Street tier' };
+  if (score >= 60) return { low: 190, high: 240, label: 'Charlottesville / Jupiter / Scotts Valley tier' };
+  if (score >= 55) return { low: 140, high: 190, label: 'Stamford / Denver RiNo tier' };
+  if (score >= 50) return { low: 110, high: 160, label: 'Tampa Ybor / Westminster tier' };
+  if (score >= 45) return { low: 90, high: 140, label: 'St Pete tier (closure risk)' };
+  return { low: 50, high: 120, label: 'Johns Creek tier (likely failure)' };
+}
 
 function tierFromScore(score) {
   if (score >= 85) return { label: 'Strong Fit',  cls: 'tier-strong',   verdict: 'Alexandria-tier. Move on it.' };
@@ -344,10 +369,13 @@ async function runEvaluation() {
 function renderResults(address, result) {
   const total = result.total;
   const tier = tierFromScore(total);
+  const memberRange = memberRangeFromScore(total);
 
   document.getElementById('score-num').textContent = total;
   document.getElementById('addr-display').textContent = address;
   document.getElementById('quick-take').textContent = tier.verdict;
+  document.getElementById('member-estimate-value').textContent = `${memberRange.low}–${memberRange.high} members`;
+  document.querySelector('#member-estimate-box .member-estimate-label').textContent = `Estimated Members at Maturity · ${memberRange.label}`;
 
   const badge = document.getElementById('tier-badge');
   badge.textContent = result.tier || tier.label;
@@ -439,8 +467,11 @@ function buildManualPanel(scores) {
 function updateDisplay() {
   const total = totalScore(currentScores);
   const tier = tierFromScore(total);
+  const memberRange = memberRangeFromScore(total);
   document.getElementById('score-num').textContent = total;
   document.getElementById('quick-take').textContent = tier.verdict;
+  document.getElementById('member-estimate-value').textContent = `${memberRange.low}–${memberRange.high} members`;
+  document.querySelector('#member-estimate-box .member-estimate-label').textContent = `Estimated Members at Maturity · ${memberRange.label}`;
   const badge = document.getElementById('tier-badge');
   badge.textContent = tier.label;
   badge.className = 'tier-badge ' + tier.cls;
@@ -462,9 +493,11 @@ document.getElementById('copy-btn').addEventListener('click', () => {
   if (!currentScores) return;
   const total = totalScore(currentScores);
   const tier = tierFromScore(total);
+  const memberRange = memberRangeFromScore(total);
   const lines = [
     `MADabolic Site Eval — ${currentAddress}`,
     `Score: ${total}/100  (${tier.label})`,
+    `Estimated members at maturity: ${memberRange.low}-${memberRange.high}  (${memberRange.label})`,
     '',
     'Verdict:',
     document.getElementById('verdict').textContent,
