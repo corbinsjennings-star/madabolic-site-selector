@@ -205,13 +205,10 @@ THE PATTERN: same characteristics that make a neighborhood "hot" — breweries, 
 - ENTERTAINMENT-ZONE WALKABILITY (H Street, RiNo, Ybor, parts of O4W): bars/breweries/restaurants/galleries dominant, evening/weekend energy. Score walkability MODERATE (6-8 max) and trade_area LOWER (5-8 max) regardless of how high the Walk Score is.
 WARNING SIGNS THIS IS AN ENTERTAINMENT DISTRICT: brewery district, art district, "nightlife corridor," tourism destination, multiple bars/restaurants per block, "hottest neighborhood" media coverage, Friday-Saturday energy noticeably higher than Monday-Wednesday. If the neighborhood's identity is "fun" rather than "where I live and routine," score it as entertainment-zone.
 
-LESSON 8 — MAJOR METRO ADJACENCY / SHADOW FRAGMENTATION:
-Cities within 1-hour rail or highway commute of a major metro (NYC, LA, Chicago, SF, DC, Boston) suffer SHADOW FRAGMENTATION: premium fitness demand bleeds to the bigger market, leaving the local studio with the residual. Stamford CT (Harbor Point, 850 Canal St) is struggling badly after 3 years despite affluent metro demographics on paper because:
-- Stamford is 45 min Metro-North to Manhattan
-- Premium fitness consumers commute to/from NYC daily and consume fitness IN Manhattan (Equinox, Barry's, Solidcore, Tone House — overwhelming supply)
-- Stamford-only fitness demand is the residual after NYC siphons high-end consumers
-- Harbor Point's luxury rental transience compounds the retention problem
-WHEN TO APPLY: any prospective city within 1-hour commute of a top-10 US metro. Score income LOWER (fragmentation risk to bigger metro's premium options), score trade_area LOWER (commute path goes to the other metro, not local routine), score stability LOWER (commuter culture creates weekday absence). Examples to flag: Stamford, White Plains, Long Island towns (NYC adjacency), Pasadena, Santa Monica adjacent areas (LA), Naperville (Chicago), San Mateo, Berkeley (SF), Bethesda for non-government workers (DC), Cambridge satellite areas (Boston). EXCEPTION: if the location IS in the major metro (Manhattan, downtown LA, Loop) it's not "adjacent" — it's the main market and rules don't apply.
+LESSON 8 — MAJOR METRO ADJACENCY (NUANCED, NOT A KILL CRITERION):
+Be careful here — earlier versions of this prompt over-penalized "metro adjacency." The actual MADabolic data shows morning consumption (6am classes, highest volume) anchors NEAR HOME before commute, not at work. So a Falls Church resident commuting to DC will still consume a Falls Church studio for morning classes. Evening fitness can fragment to commute-end, but morning is the LOCAL anchor.
+The Stamford CT location's real failure was NOT generic "metro adjacency" — it was luxury rental transience (Harbor Point's 322-unit luxury rental directly across) + Manhattan-scale fitness supply siphoning. Specifically: Stamford has very high commuter density to NYC AND ultra-luxury rental dominance AND Manhattan fitness brands have brand pull even into CT. That's a triple-stack of issues, not a generic adjacency penalty.
+RULE: do NOT downgrade affluent walkable suburbs of major metros just because residents commute. Falls Church, Bethesda, Vienna, Reston, Berkeley, Walnut Creek, Pasadena, Naperville, Cambridge can all support local studios because morning consumption is local. Only score adjacency-shadow penalties when the specific location has multiple confounders: luxury rental dominance + scale-supply-siphoning brand from the bigger metro + low local population. Stamford had all three. Most metro suburbs do not.
 
 LESSON 7 — SMALL MARKET DYNAMICS (CRITICAL CALIBRATION):
 Locations in small metros (city population under 75k or metro under 500k) need DIFFERENT calibration. The framework's density, walkability, and trade-area penalties were calibrated against major-metro expectations — they over-penalize small markets.
@@ -422,7 +419,7 @@ MADabolic FAILURE PATTERNS (kill criteria to AVOID):
 - Entertainment district trap (RiNo Denver, Tampa Ybor, H Street DC: high Walk Score and density but nightlife/brewery-dominant cultural use → trial without retention)
 - Below-sweet-spot income + stroad combo (St Pete failure: $57-70k median + industrial corridor = closure)
 
-EXISTING MADabolic LOCATIONS (do NOT recommend a corridor in these metros — cannibalization risk):
+EXISTING MADabolic LOCATIONS (FYI for context — do NOT use these as a cannibalization penalty. MAD corporate enforces territorial protection, and morning consumption anchors at home not at work, so existing nearby studios are not a meaningful negative. Score locations on their own merits.):
 - Washington DC metro (Alexandria, Arlington, Dupont, H Street, 14th Street)
 - Atlanta (Old Fourth Ward / Sweet Auburn)
 - Austin TX (St Elmo)
@@ -449,7 +446,7 @@ YOUR JOB:
 
 If the area has no good fit (too small, too saturated, all candidates fit failure patterns), say so honestly in the verdict and give the best of bad options with low scores and warnings.
 
-If MADabolic already operates in the recommended sub-area (see existing locations list above), pivot to a DIFFERENT sub-area within the requested geography that wouldn't cannibalize the existing location. Flag the cannibalization concern in the verdict. Example: input "Northern Virginia" → existing locations are Arlington and Alexandria → recommend Falls Church or Vienna or Reston instead.
+DO NOT use existing nearby MAD locations as a penalty or kill criterion. MAD corporate enforces territorial protection between franchisees. Morning consumption (the high-volume slot) anchors at home before commute, not at work. So if Falls Church scores well on its own fundamentals, recommend Falls Church even though Arlington and Alexandria exist nearby. Optional brief mention is fine but it should NOT swing the score or verdict. Recommend the corridor that best fits MAD success patterns regardless of nearby existing studios.
 
 Return ONLY valid JSON, no markdown:
 {
