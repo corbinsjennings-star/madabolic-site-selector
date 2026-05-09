@@ -151,6 +151,22 @@ function buildScoringPrompt(address, benchmarks) {
 
   return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. Score the prospective location at "${address}" for likelihood of success.
 
+AMBIGUITY CHECK — DO THIS FIRST BEFORE ANY WEB SEARCH:
+If "${address}" is ambiguous (no state given for a city name that exists in multiple states like "Arlington" / "Springfield" / "Portland" / "Columbus" / "Aurora" / "Richmond"; or no city given for a street name; or otherwise unclear which place is meant), STOP IMMEDIATELY and return ONLY this JSON, no scoring, no searches:
+{
+  "clarification_needed": true,
+  "clarification_prompt": "1-sentence question explaining the ambiguity",
+  "clarification_options": [
+    {"label": "Human-readable description with city/state", "value": "Disambiguated string to use as new input"},
+    {"label": "...", "value": "..."}
+  ]
+}
+List 2-4 most-likely candidates ordered by population. Each label should include city and state plus a brief disambiguator like "(Washington DC area)" or "(Dallas-Fort Worth)". The "value" should be the cleaned-up version (e.g. "Arlington, VA" or "1234 Main St, Arlington VA").
+If "${address}" is unambiguous (clear city + state, or specific complete street address), proceed normally and return the full scoring JSON. Do NOT include clarification fields when the input is clear.
+
+When the input IS clear, your task is to score the location:
+
+
 MADabolic wins in markets that are:
 - Affluent but not ultra-elite. Sweet spot household income $100k-$150k. Above $200k median fragments aggressively to country clubs, private trainers, Equinox, Lifetime Fitness — DOWNGRADE these markets even if every other metric looks great.
 - Stable and routine-driven. High homeownership, married professionals, long average residency. Transient populations destroy retention.
@@ -336,6 +352,11 @@ async function scoreAddressWithLLM(address) {
   if (!objMatch) throw new Error('No JSON found in response: ' + fullText.slice(0, 300));
   const parsed = JSON.parse(objMatch[0]);
 
+  // Short-circuit: if AI requested clarification, return without scoring
+  if (parsed.clarification_needed) {
+    return parsed;
+  }
+
   // Compute total + tier
   const total = totalScore(parsed.scores);
   return {
@@ -357,6 +378,20 @@ function buildCitySearchPrompt(area, benchmarks) {
 
   return `You are a site selection analyst for MADabolic, a strength-focused boutique fitness franchise. The user has asked: "where in ${area} would be the best place to put a MADabolic?"
 
+AMBIGUITY CHECK — DO THIS FIRST BEFORE ANY WEB SEARCH:
+If "${area}" is ambiguous (could refer to multiple distinct places, e.g. "Arlington" without state could be VA or TX or MA; "Springfield" could be IL/MO/MA/OR; "Portland" could be OR or ME; "Columbus" could be OH or GA; "Aurora" could be CO or IL; "Richmond" could be VA or CA; "Glendale" could be CA or AZ), STOP IMMEDIATELY and return ONLY this JSON, no scoring, no searches:
+{
+  "clarification_needed": true,
+  "clarification_prompt": "1-sentence question explaining the ambiguity",
+  "clarification_options": [
+    {"label": "Human-readable description with state and disambiguator", "value": "Disambiguated string to use as new input"},
+    {"label": "...", "value": "..."}
+  ]
+}
+List 2-4 most-likely candidates ordered by population. Each label should include the full state plus a brief disambiguator like "(Washington DC area)" or "(Dallas-Fort Worth metro)" or "(Boston suburb)". The "value" should be the cleaned-up version like "Arlington, VA" or "Portland, OR".
+If "${area}" is unambiguous (clear state included, or unique well-known region like "Bay Area" / "Northern Virginia" / "Triangle NC"), proceed normally with the full search and scoring. Do NOT include clarification fields when the input is clear.
+
+When the input IS clear:
 The input "${area}" may be ANY of the following, and you must adapt:
 - A specific city (e.g. "Charlotte NC", "Houston TX") — search corridors within that city
 - A metro region or geographic area (e.g. "Northern Virginia", "Bay Area", "Tampa Bay area", "DFW", "Inland Empire", "Triangle NC", "Front Range", "Twin Cities") — identify the candidate cities/towns/sub-areas within the region, then drill down to the best corridor in the best sub-area
@@ -461,6 +496,11 @@ async function findBestInCityWithLLM(area) {
   const objMatch = jsonStr.match(/\{[\s\S]*\}/);
   if (!objMatch) throw new Error('No JSON found in city-search response: ' + fullText.slice(0, 300));
   const parsed = JSON.parse(objMatch[0]);
+
+  // Short-circuit: if AI requested clarification, return without scoring
+  if (parsed.clarification_needed) {
+    return parsed;
+  }
 
   const total = totalScore(parsed.scores);
   return { ...parsed, total, tier: tierFromScore(total) };

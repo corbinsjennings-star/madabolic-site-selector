@@ -114,6 +114,13 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
 .alternative-callout .ac-reasoning { font-size: 13px; color: var(--ink); line-height: 1.5; }
 .alternative-callout .ac-rescore { margin-top: 10px; font-size: 12px; padding: 6px 12px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
 .alternative-callout .ac-rescore:hover { background: var(--accent-dark); }
+.clarification-card { padding: 20px; background: var(--surface); border: 2px solid var(--accent); border-radius: 12px; margin-top: 14px; box-shadow: var(--shadow); }
+.clarification-card .cc-prompt { font-size: 16px; font-weight: 600; margin-bottom: 14px; color: var(--ink); }
+.clarification-card .cc-options { display: flex; flex-direction: column; gap: 8px; }
+.clarification-card .cc-option { padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; text-align: left; font-size: 14px; color: var(--ink); transition: all 0.15s; font-family: inherit; }
+.clarification-card .cc-option:hover { border-color: var(--accent); background: #fdf3f1; }
+.clarification-card .cc-option-label { font-weight: 600; }
+.clarification-card .cc-option-value { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .verdict { padding: 16px 18px; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
 .history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
 .history-row:hover { background: #efeae3; }
@@ -168,6 +175,7 @@ button.secondary:hover:not(:disabled) { background: var(--bg); }
   </div>
   <div class="status" id="status"></div>
   <div id="error-box"></div>
+  <div id="clarification-box"></div>
   <p style="font-size:12px;color:var(--muted);margin:10px 0 0" id="mode-hint">Enter an exact address to score it. If it scores under 70, the tool will also suggest a better corridor within 15 miles.</p>
 </div>
 
@@ -400,6 +408,13 @@ async function runEvaluation() {
     }
     const result = await res.json();
 
+    // Disambiguation short-circuit: AI didn't score, just asked for clarification
+    if (result.clarification_needed) {
+      renderClarification(result);
+      setStatus('');
+      return;
+    }
+
     // For city search, the AI returns a recommended_address — use that as the display address
     const displayAddress = (currentMode === 'city' && result.recommended_address)
       ? result.recommended_address
@@ -409,6 +424,7 @@ async function runEvaluation() {
     currentScores = result.scores;
     currentEvidence = result.evidence || {};
     currentAddress = displayAddress;
+    clearClarification();
     renderResults(displayAddress, result);
     saveToHistory(displayAddress, result);
     setStatus('');
