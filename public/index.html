@@ -286,18 +286,18 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
 
 <div class="card">
   <div class="mode-toggle" id="mode-toggle">
-    <button class="mode-btn active" data-mode="address">Score Specific Address</button>
-    <button class="mode-btn" data-mode="city">Best Spot in an Area (City, Area, State)</button>
+    <button class="mode-btn active" data-mode="city">Best Spot in an Area (City, Area, State)</button>
+    <button class="mode-btn" data-mode="address">Score Specific Address</button>
   </div>
-  <label for="addr" class="section-title" id="input-label">Prospective Address</label>
+  <label for="addr" class="section-title" id="input-label">City, Metro, or Region to Search</label>
   <div class="input-row">
-    <input id="addr" type="text" placeholder="e.g. 1234 King Street, Charleston SC" />
-    <button id="run-btn">Score</button>
+    <input id="addr" type="text" placeholder="e.g. Northern Virginia, Charlotte NC, Bay Area, Tampa Bay, Triangle NC, Tennessee" />
+    <button id="run-btn">Find Best Spot</button>
   </div>
   <div class="status" id="status"></div>
   <div id="error-box"></div>
   <div id="clarification-box"></div>
-  <p style="font-size:12px;color:var(--muted);margin:10px 0 0" id="mode-hint">Enter an exact address to score it. If it scores under 70, the tool will also suggest a better corridor within 15 miles.</p>
+  <p style="font-size:12px;color:var(--muted);margin:10px 0 0" id="mode-hint">Enter a city ("Charlotte NC"), metro region ("Northern Virginia", "Bay Area", "Tampa Bay"), or even a state. The tool will narrow to the best sub-area, find the top 5 corridors, and fully score the #1.</p>
 </div>
 
 <div class="results" id="results">
@@ -534,7 +534,7 @@ function renderClarification(result) {
   resultsEl.classList.remove('show');
 }
 
-let currentMode = 'address'; // 'address' or 'city'
+let currentMode = 'city'; // 'address' or 'city' — default is city/area search
 
 async function runEvaluation() {
   const input = addrInput.value.trim();
@@ -607,7 +607,7 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
     if (currentMode === 'city') {
       addrInput.placeholder = 'e.g. Northern Virginia, Charlotte NC, Bay Area, Tampa Bay, Triangle NC, Tennessee';
       document.getElementById('input-label').textContent = 'City, Metro, or Region to Search';
-      document.getElementById('mode-hint').textContent = 'Enter a city ("Charlotte NC"), metro region ("Northern Virginia", "Bay Area", "Tampa Bay"), or even a state. The tool will narrow to the best sub-area, find the best corridor, and score it.';
+      document.getElementById('mode-hint').textContent = 'Enter a city ("Charlotte NC"), metro region ("Northern Virginia", "Bay Area", "Tampa Bay"), or even a state. The tool will narrow to the best sub-area, find the top 5 corridors, and fully score the #1.';
       runBtn.textContent = 'Find Best Spot';
     } else {
       addrInput.placeholder = 'e.g. 1234 King Street, Charleston SC';
