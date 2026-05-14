@@ -246,14 +246,16 @@ Cincinnati Woodburn (2543 Woodburn Ave, East Walnut Hills) is on track for 300+ 
 - OVERSATURATED + STROAD (suburban arterial in major metro with multiple competitors): Planet Fitness within 2 blocks AND F45/OTF/Solidcore stacked in a non-village layout. Score competition 4 AND walkability 4 hard.
 A single direct competitor in a real urban village is FAR less damaging than 3 competitors in a saturated stroad market.
 
-CALIBRATION ANCHORS BY ACTUAL MEMBER COUNT (use these to calibrate score gaps):
-- 350+ members (Alexandria peak): score 85-90 (Strong Fit)
-- 300+ members consistently in major metro (14th St, Cincinnati at 18mo, Arlington, Asheville, Austin St Elmo): score 75-83 (Good Fit)
-- 250-300 members operating but underperforming target (H Street at 262 members in major metro): score 65-72 (Marginal)
-- 200-250 members in small market with limited alternatives (Charlottesville at 245, Scotts Valley at 230): score 60-68 (Marginal — appropriate for small market)
-- 100-200 members severely underperforming in major metro (stroad strip mall layout, multiple competitors nearby): score 45-55 (Risky)
+CALIBRATION ANCHORS BY PEAK MEMBER COUNT (NOT current — peak is the structural-ceiling signal):
+The score predicts the location's PEAK MEMBER CEILING — what it's capable of reaching at maturity (typically 2-2.5 years in, sometimes longer). Current members can be temporarily depressed by churn cycles, GM transitions, post-pandemic dips, or new-location ramp time. Score against peak, not against today's number.
+- Peak 350+ (Alexandria-tier gold standard): score 85-90 (Strong Fit)
+- Peak 300-350 (top growth-corridor performers like South End Charlotte, Cincinnati Woodburn, 14th St DC, Arlington, Austin St Elmo, Asheville at peak): score 75-84 (Good Fit)
+- Peak 250-300 (operating-but-underperforming-target, H Street at 262 peak, Charlottesville at 270 peak, Jupiter at 250 peak): score 65-72 (Marginal)
+- Peak 200-250 (small-market success, Scotts Valley 230, Atlanta Auburn 225, Southlake 225, Greenville 200): score 60-68 (Marginal — appropriate for small market or capped market)
+- Peak 150-200 (small-market viable but lower-end, Winchester projected 180-200): score 56-62 (Marginal/Risky boundary)
+- Peak 100-150 (severely underperforming, stroad strip mall in major metro, Tampa Ybor ~125): score 48-56 (Risky)
 - Closed/failed (St Petersburg, Johns Creek): score 38-48 (Risky)
-The score gap between an underperforming-but-viable urban location (H Street, 262 members) and a severely-underperforming stroad location (~125 members in major metro) should be 15-20 POINTS, not 4-5. Member count differences of 2x require score gaps of 15+ points. ALSO: a 230-member small-market location with limited alternatives is NOT the same as a 230-member major-metro location with multiple competitors — context shapes whether 230 is success or failure.
+PEAK GAP RULE: a peak-262 location (H Street) and a peak-125 location should be 15-20 points apart in score, not 4-5. Peak differences of ~2x require score gaps of 15+ points. CONTEXT MATTERS: peak 230 in a small market with limited alternatives (Scotts Valley) is success and scores Marginal; peak 230 in a major metro with saturated competition would still be Marginal but for different reasons.
 
 LESSON 5 — STRIP MALL vs URBAN VILLAGE WALKABILITY (CRITICAL DISTINCTION):
 Walk Score alone is misleading. A strip mall on a major arterial road can score Walk Score 70-80 because Starbucks/CVS/grocery are nearby — but it is NOT urban village walkability. Example failure pattern: a suburban arterial location with Walk Score 75 can struggle severely (low 100s members at 2 years) because it is a strip-center play in a car corridor where nobody walks to the gym — people drive and park, treating it as a destination not a daily-routine pass-by. Distinguish:
