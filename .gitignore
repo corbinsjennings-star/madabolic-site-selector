@@ -11,6 +11,9 @@ yarn-error.log*
 # Comment out the line below if you want submissions tracked in git
 data/locations.json
 
+# Score cache (built up at runtime, invalidates when benchmarks change)
+data/score-cache.json
+
 # Old standalone HTML (replaced by public/index.html). Remove or keep, your call.
 madabolic-site-selector.html
 

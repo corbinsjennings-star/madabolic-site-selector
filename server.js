@@ -9,6 +9,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -22,6 +23,7 @@ const SCORING_MODEL = process.env.SCORING_MODEL || 'claude-sonnet-4-5-20250929';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const SEED_PATH = path.join(__dirname, 'data', 'locations.seed.json');
 const STORE_PATH = path.join(DATA_DIR, 'locations.json');
+const SCORE_CACHE_PATH = path.join(DATA_DIR, 'score-cache.json');
 
 function ensureStore() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -93,6 +95,45 @@ function loadStore() {
 function saveStore(data) {
   ensureStore();
   fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
+}
+
+// ============ SCORE CACHE (deterministic, address-keyed) ============
+// Same address always returns the same scoring result so different users see the same number.
+// Cache invalidates automatically when the benchmark dataset changes (different fingerprint).
+
+function normalizeAddress(addr) {
+  return String(addr || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[,.]/g, '');
+}
+
+function benchmarkFingerprint() {
+  try {
+    const store = loadStore();
+    const ids = (store.locations || []).map(l => l.id).sort().join('|');
+    return crypto.createHash('sha256').update(ids).digest('hex').slice(0, 12);
+  } catch (e) {
+    return 'unknown';
+  }
+}
+
+function cacheKey(mode, addr) {
+  return `${mode}::${benchmarkFingerprint()}::${normalizeAddress(addr)}`;
+}
+
+function loadCache() {
+  if (!fs.existsSync(SCORE_CACHE_PATH)) return {};
+  try { return JSON.parse(fs.readFileSync(SCORE_CACHE_PATH, 'utf8')); } catch { return {}; }
+}
+function saveCache(cache) {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(SCORE_CACHE_PATH, JSON.stringify(cache, null, 2));
+}
+function getCachedScore(mode, addr) {
+  return loadCache()[cacheKey(mode, addr)];
+}
+function setCachedScore(mode, addr, result) {
+  const cache = loadCache();
+  cache[cacheKey(mode, addr)] = { result, ts: new Date().toISOString() };
+  saveCache(cache);
 }
 
 // ============ MIDDLEWARE ============
@@ -347,6 +388,7 @@ async function scoreAddressWithLLM(address) {
   const response = await client.messages.create({
     model: SCORING_MODEL,
     max_tokens: 4000,
+    temperature: 0,
     tools: [{
       type: 'web_search_20250305',
       name: 'web_search',
@@ -507,6 +549,7 @@ async function findBestInCityWithLLM(area) {
   const response = await client.messages.create({
     model: SCORING_MODEL,
     max_tokens: 5000,
+    temperature: 0,
     tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
     messages: [{ role: 'user', content: prompt }]
   });
@@ -567,9 +610,9 @@ app.get('/api/locations', (req, res) => {
   res.json({ locations });
 });
 
-// Score a prospective address
+// Score a prospective address (cached for consistency across users)
 app.post('/api/score', async (req, res) => {
-  const { address } = req.body || {};
+  const { address, force } = req.body || {};
   if (!address || typeof address !== 'string' || address.trim().length < 3) {
     return res.status(400).json({ error: 'address required (string, min 3 chars)' });
   }
@@ -577,8 +620,20 @@ app.post('/api/score', async (req, res) => {
     return res.status(503).json({ error: 'Scoring is not configured. Set ANTHROPIC_API_KEY in environment variables.' });
   }
   try {
-    console.log('[score] Scoring:', address);
-    const result = await scoreAddressWithLLM(address.trim());
+    const cleanAddr = address.trim();
+    if (!force) {
+      const cached = getCachedScore('score', cleanAddr);
+      if (cached) {
+        console.log('[score] Cache hit:', cleanAddr);
+        return res.json({ ...cached.result, cached: true, cached_at: cached.ts });
+      }
+    }
+    console.log('[score] Scoring:', cleanAddr, force ? '(forced rescore)' : '');
+    const result = await scoreAddressWithLLM(cleanAddr);
+    // Only cache full scoring results, not clarification requests
+    if (!result.clarification_needed) {
+      setCachedScore('score', cleanAddr, result);
+    }
     res.json(result);
   } catch (e) {
     console.error('[score] Error:', e);
@@ -586,10 +641,11 @@ app.post('/api/score', async (req, res) => {
   }
 });
 
-// Find best corridor in a city, region, metro area, or state
+// Find best corridor in a city, region, metro area, or state (cached for consistency)
 app.post('/api/find-best-in-city', async (req, res) => {
   const body = req.body || {};
   const area = (body.area || body.city || '').trim();
+  const force = !!body.force;
   if (!area || area.length < 2) {
     return res.status(400).json({ error: 'area or city required (string)' });
   }
@@ -597,13 +653,30 @@ app.post('/api/find-best-in-city', async (req, res) => {
     return res.status(503).json({ error: 'Scoring is not configured. Set ANTHROPIC_API_KEY.' });
   }
   try {
-    console.log('[find-best] Searching:', area);
+    if (!force) {
+      const cached = getCachedScore('city', area);
+      if (cached) {
+        console.log('[find-best] Cache hit:', area);
+        return res.json({ ...cached.result, cached: true, cached_at: cached.ts });
+      }
+    }
+    console.log('[find-best] Searching:', area, force ? '(forced rescore)' : '');
     const result = await findBestInCityWithLLM(area);
+    if (!result.clarification_needed) {
+      setCachedScore('city', area, result);
+    }
     res.json(result);
   } catch (e) {
     console.error('[find-best] Error:', e);
     res.status(500).json({ error: e.message || 'Area search failed' });
   }
+});
+
+// Admin: clear the entire score cache (force fresh scoring for all addresses)
+app.post('/api/admin/clear-cache', requireAdmin, (req, res) => {
+  saveCache({});
+  console.log('[cache] Cleared by admin');
+  res.json({ ok: true });
 });
 
 // Admin: full record dump

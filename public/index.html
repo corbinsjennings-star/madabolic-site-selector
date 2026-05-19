@@ -261,6 +261,9 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
 .tc-action { padding: 6px 10px; font-size: 10px; font-weight: 700; background: transparent; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.8px; transition: all 0.15s; font-family: inherit; }
 .tc-action:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
 .tc-current { padding: 6px 10px; font-size: 10px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; text-transform: uppercase; letter-spacing: 0.8px; background: var(--accent-glow); }
+.cache-badge { display: inline-block; padding: 3px 8px; font-size: 10px; font-weight: 600; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 3px; text-transform: uppercase; letter-spacing: 1px; margin-left: 8px; vertical-align: middle; }
+.rescore-btn { margin-left: 10px; font-size: 10px; padding: 5px 10px; background: transparent; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; transition: all 0.15s; font-family: inherit; }
+.rescore-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
 @media (max-width: 700px) {
   .tc-row { grid-template-columns: 28px 1fr auto; }
   .tc-action, .tc-current { grid-column: 2 / 4; justify-self: end; margin-top: 4px; }
@@ -326,6 +329,8 @@ button.secondary:hover:not(:disabled) { background: var(--surface-2); border-col
       </div>
       <div class="score-summary">
         <span class="tier-badge" id="tier-badge">—</span>
+        <span class="cache-badge" id="cache-badge" style="display:none">Cached</span>
+        <button class="rescore-btn" id="rescore-btn" style="display:none">Force Rescore</button>
         <h2 id="addr-display">—</h2>
         <div class="member-estimate" id="member-estimate-box">
           <div class="member-estimate-label">Estimated Peak Members</div>
@@ -536,7 +541,7 @@ function renderClarification(result) {
 
 let currentMode = 'city'; // 'address' or 'city' — default is city/area search
 
-async function runEvaluation() {
+async function runEvaluation(forceRescore = false) {
   const input = addrInput.value.trim();
   if (!input) {
     setError(currentMode === 'city' ? 'Enter a city first.' : 'Enter an address first.');
@@ -556,7 +561,7 @@ async function runEvaluation() {
 
   try {
     const endpoint = currentMode === 'city' ? '/api/find-best-in-city' : '/api/score';
-    const body = currentMode === 'city' ? { city: input } : { address: input };
+    const body = currentMode === 'city' ? { city: input, force: forceRescore } : { address: input, force: forceRescore };
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -628,6 +633,19 @@ function renderResults(address, result) {
   document.getElementById('quick-take').textContent = tier.verdict;
   document.getElementById('member-estimate-value').textContent = `${memberRange.low}–${memberRange.high} members`;
   document.querySelector('#member-estimate-box .member-estimate-label').textContent = `Estimated Peak Members · ${memberRange.label}`;
+
+  // Cached indicator + rescore button
+  const cacheBadge = document.getElementById('cache-badge');
+  const rescoreBtn = document.getElementById('rescore-btn');
+  if (result.cached) {
+    const cachedDate = result.cached_at ? new Date(result.cached_at).toLocaleDateString() : '';
+    cacheBadge.textContent = cachedDate ? `Cached ${cachedDate}` : 'Cached';
+    cacheBadge.style.display = 'inline-block';
+    rescoreBtn.style.display = 'inline-block';
+  } else {
+    cacheBadge.style.display = 'none';
+    rescoreBtn.style.display = 'none';
+  }
 
   const badge = document.getElementById('tier-badge');
   badge.textContent = result.tier || tier.label;
@@ -949,8 +967,9 @@ function renderHistory() {
   if (clearBtn) clearBtn.addEventListener('click', clearAllHistory);
 }
 
-runBtn.addEventListener('click', runEvaluation);
-addrInput.addEventListener('keydown', e => { if (e.key === 'Enter') runEvaluation(); });
+runBtn.addEventListener('click', () => runEvaluation(false));
+addrInput.addEventListener('keydown', e => { if (e.key === 'Enter') runEvaluation(false); });
+document.getElementById('rescore-btn').addEventListener('click', () => runEvaluation(true));
 
 // Collapsible benchmark locations card
 document.getElementById('locations-toggle').addEventListener('click', () => {
